@@ -1,4 +1,4 @@
-<!doctype html> 
+<!doctype html>
 <html lang="es">
 <head>
   <meta charset="utf-8" />
@@ -62,7 +62,7 @@
       background-attachment: fixed;
 
       /* ✅ MODO OSCURO: MISMAS PIEZAS BONITAS (solo glow cute) */
-      --block-outline: 1px solid rgba(255,255,255,.22);
+      --block-outline: 1px solid rgba(255,255,255,.55);
       --block-shadow: 0 12px 22px rgba(0,0,0,.40), 0 0 16px rgba(255,106,168,.22);
       --block-hi: inset 0 1px 0 rgba(255,255,255,.28);
     }
@@ -819,10 +819,9 @@
     // 6) Rendering blocks + preview
     // =========================
     function styleBlock(b){
-      /* ✅ CAMBIO ÚNICO: piezas planas + borde finito (sin sombra) */
-      b.style.outline = getComputedStyle(document.documentElement).getPropertyValue("--block-outline").trim() || "1px solid rgba(255,255,255,.45)";
-      b.style.boxShadow = "none";
-      b.style.filter = "none";
+      /* ✅ CAMBIO ÚNICO: MISMO look del modo claro incluso en night (sin sombrita extra) */
+      b.style.outline = "1px solid rgba(255,255,255,.55)";
+      b.style.boxShadow = "0 10px 18px rgba(0,0,0,.12)";
     }
 
     function renderBlocks(container, g, color){
@@ -1031,7 +1030,602 @@
     }
 
     /* TODO LO DEMÁS DE TU JS QUEDA EXACTO (sin cambios) */
-    // ... (resto igual)
+    // =========================
+    // 8) Game Over logic (el bug que viste)
+    // =========================
+    function anyMoveAvailableNow(){
+      if(!player) return true;
+      const g = myActiveGrid();
+      const livePieces = pieces.filter(p => p !== null);
+      if(livePieces.length === 0) return true; // si no hay piezas, se refill-ea
+      return livePieces.some(p => anyPlacementExists(g, p));
+    }
+
+    async function endGame(loserName){
+      if(!roomId) return;
+      if(gameOver) return; // ya terminó
+      const win = otherPlayer(loserName);
+
+      gameOver = true;
+      winner = win;
+      loser = loserName;
+      endedAt = new Date().toISOString();
+
+      // actualizar room_state (esto se sync-ea al rival por realtime)
+      const payload = {
+        room_id: roomId,
+        emy_score: emyScore,
+        diego_score: diegoScore,
+        emy_grid: gridToJson(emyGrid),
+        diego_grid: gridToJson(diegoGrid),
+        updated_at: new Date().toISOString(),
+        game_over: true,
+        winner: winner,
+        loser: loserName,
+        ended_at: endedAt
+      };
+
+      const { error } = await supabase
+        .from("room_state")
+        .upsert(payload, { onConflict: "room_id" });
+
+      if(error){
+        console.error(error);
+        setStatus("Error guardando game over (F12)");
+      } else {
+        setStatus("Estado: partida terminada 🤡");
+      }
+
+      showGameOverModal();
+      await writeMatchHistoryOnce();
+      await loadLeaderboard();
+      renderAll();
+    }
+
+    function showGameOverModal(){
+      if(!winner || !loser) return;
+
+      const youLost = (player === loser);
+      const winLabel = labelName(winner);
+
+      elModalTitle.textContent = youLost ? "PERDISTE! 🤡" : "GANASTE! 🤡";
+      elModalText.textContent = (youLost ? `PERDISTE! ${winLabel} GANÓ 🤡` : `${winLabel} GANÓ 🤡`);
+      elModalBack.classList.add("show");
+    }
+
+    elBtnCloseModal.addEventListener("click", ()=> elModalBack.classList.remove("show"));
+
+    async function writeMatchHistoryOnce(){
+      if(historyWritten) return;
+      if(!matchId || !startedAt || !endedAt || !winner || !loser) return;
+
+      const start = new Date(startedAt).getTime();
+      const end = new Date(endedAt).getTime();
+      const durationSec = Math.max(0, Math.floor((end - start)/1000));
+
+      const row = {
+        match_id: matchId,
+        room_id: roomId,
+        room_code: roomCode,
+        started_at: startedAt,
+        ended_at: endedAt,
+        duration_sec: durationSec,
+        winner: winner,
+        loser: loser,
+        emy_score: emyScore,
+        diego_score: diegoScore
+      };
+
+      const { error } = await supabase
+        .from("matches")
+        .insert(row);
+
+      if(error){
+        console.warn("matches insert:", error.message);
+      } else {
+        historyWritten = true;
+      }
+    }
+
+    // =========================
+    // 9) Placement logic + scoring
+    // =========================
+    function doPlace(grid, pts, ox, oy){
+      for(const p of pts){
+        grid[oy+p.y][ox+p.x] = 1;
+      }
+    }
+
+    function clearLines(grid){
+      let cleared = 0;
+
+      for(let y=0;y<SIZE;y++){
+        let full = true;
+        for(let x=0;x<SIZE;x++){
+          if(!grid[y][x]){ full=false; break; }
+        }
+        if(full){
+          cleared++;
+          for(let x=0;x<SIZE;x++) grid[y][x]=0;
+        }
+      }
+
+      for(let x=0;x<SIZE;x++){
+        let full = true;
+        for(let y=0;y<SIZE;y++){
+          if(!grid[y][x]){ full=false; break; }
+        }
+        if(full){
+          cleared++;
+          for(let y=0;y<SIZE;y++) grid[y][x]=0;
+        }
+      }
+
+      return cleared;
+    }
+
+    function addScore(who, delta){
+      if(who === "emy") emyScore += delta;
+      else diegoScore += delta;
+      elPlusHint.textContent = String(delta);
+      setTimeout(()=> elPlusHint.textContent = "0", 700);
+    }
+
+    function placePieceAtCell(cellX, cellY){
+      if(gameOver) return false;
+      if(selectedIndex === null) return false;
+      const piece = pieces[selectedIndex];
+      if(!piece) return false;
+
+      const g = myActiveGrid();
+      const ok = canPlace(g, piece.pts, cellX, cellY);
+      if(!ok) return false;
+
+      doPlace(g, piece.pts, cellX, cellY);
+
+      const lines = clearLines(g);
+      const pts = piece.pts.length + (lines * 10);
+      addScore(player, pts);
+
+      if(lines > 0) spawnClearFX(lines);
+
+      pieces[selectedIndex] = null;
+      selectedIndex = null;
+
+      if(pieces.every(p => p === null)){
+        ensurePlayablePieces();
+      }
+
+      queueSave();
+      renderAll();
+
+      if(!anyMoveAvailableNow()){
+        endGame(player);
+      }
+
+      return true;
+    }
+
+    function cellFromEvent(ev, gridEl){
+      const rect = gridEl.getBoundingClientRect();
+      const px = ev.clientX - rect.left;
+      const py = ev.clientY - rect.top;
+      const cellX = Math.floor(px / (rect.width / SIZE));
+      const cellY = Math.floor(py / (rect.height / SIZE));
+      return {cellX, cellY};
+    }
+
+    function attachBoard(){
+      elMyGrid.addEventListener("pointermove", (ev) => {
+        if(gameOver) return;
+        if(selectedIndex === null) {
+          elMyGrid.querySelectorAll(".preview").forEach(b => b.remove());
+          return;
+        }
+        const piece = pieces[selectedIndex];
+        if(!piece || !piece.pts) return;
+
+        const {cellX, cellY} = cellFromEvent(ev, elMyGrid);
+        const ok = canPlace(myActiveGrid(), piece.pts, cellX, cellY);
+        renderPreview(elMyGrid, piece.pts, cellX, cellY, ok);
+      });
+
+      elMyGrid.addEventListener("pointerleave", () => {
+        elMyGrid.querySelectorAll(".preview").forEach(b => b.remove());
+      });
+
+      elMyGrid.addEventListener("pointerdown", async (ev) => {
+        if(gameOver) return;
+        if(!player || !roomId) return;
+        if(selectedIndex === null) return;
+
+        const {cellX, cellY} = cellFromEvent(ev, elMyGrid);
+        const ok = placePieceAtCell(cellX, cellY);
+        if(!ok){
+          elMyGrid.animate(
+            [{transform:"translateX(0)"},{transform:"translateX(-6px)"},{transform:"translateX(6px)"},{transform:"translateX(0)"}],
+            {duration:160}
+          );
+        }
+        elMyGrid.querySelectorAll(".preview").forEach(b => b.remove());
+      });
+    }
+    attachBoard();
+
+    // =========================
+    // 10) Saving / Loading
+    // =========================
+    async function loadRoomState(){
+      if(!roomId) return;
+
+      const { data, error } = await supabase
+        .from("room_state")
+        .select("*")
+        .eq("room_id", roomId)
+        .maybeSingle();
+
+      if(error){
+        console.error(error);
+        setStatus("Error cargando estado (F12)");
+        return;
+      }
+
+      if(!data){
+        startedAt = new Date().toISOString();
+        matchId = (crypto?.randomUUID?.() || ("m_" + Math.random().toString(16).slice(2)));
+
+        await supabase.from("room_state").insert({
+          room_id: roomId,
+          emy_score: 0,
+          diego_score: 0,
+          emy_grid: gridToJson(emyGrid),
+          diego_grid: gridToJson(diegoGrid),
+          updated_at: new Date().toISOString(),
+          match_id: matchId,
+          started_at: startedAt,
+          game_over: false
+        });
+        return;
+      }
+
+      emyScore = data.emy_score ?? 0;
+      diegoScore = data.diego_score ?? 0;
+      emyGrid = jsonToGrid(data.emy_grid);
+      diegoGrid = jsonToGrid(data.diego_grid);
+
+      matchId = data.match_id ?? matchId;
+      startedAt = data.started_at ?? startedAt;
+      endedAt = data.ended_at ?? endedAt;
+      gameOver = !!data.game_over;
+      winner = data.winner ?? winner;
+      loser = data.loser ?? loser;
+
+      if(gameOver){
+        setStatus("Estado: partida terminada 🤡");
+        showGameOverModal();
+        await writeMatchHistoryOnce();
+        await loadLeaderboard();
+      }
+
+      renderAll();
+    }
+
+    function queueSave(){
+      if(!roomId) return;
+      if(gameOver) return;
+
+      if(saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(async ()=>{
+        saveTimer = null;
+        const now = Date.now();
+        if(now - lastSaved < 250) return;
+        lastSaved = now;
+
+        const payload = {
+          room_id: roomId,
+          emy_score: emyScore,
+          diego_score: diegoScore,
+          emy_grid: gridToJson(emyGrid),
+          diego_grid: gridToJson(diegoGrid),
+          updated_at: new Date().toISOString(),
+          match_id: matchId,
+          started_at: startedAt,
+          game_over: false
+        };
+
+        const { error } = await supabase
+          .from("room_state")
+          .upsert(payload, { onConflict: "room_id" });
+
+        if(error){
+          console.error(error);
+          setStatus("Error guardando estado (F12)");
+        } else {
+          setStatus("Estado: jugando 💗");
+        }
+      }, 120);
+    }
+
+    // =========================
+    // 11) Realtime sync
+    // =========================
+    function stopRealtime(){
+      if(channel){
+        supabase.removeChannel(channel);
+        channel = null;
+      }
+    }
+
+    function applyRoomRow(row){
+      if(!row) return;
+
+      emyScore = row.emy_score ?? emyScore;
+      diegoScore = row.diego_score ?? diegoScore;
+      emyGrid = jsonToGrid(row.emy_grid);
+      diegoGrid = jsonToGrid(row.diego_grid);
+
+      matchId = row.match_id ?? matchId;
+      startedAt = row.started_at ?? startedAt;
+      endedAt = row.ended_at ?? endedAt;
+
+      gameOver = !!row.game_over;
+      winner = row.winner ?? winner;
+      loser = row.loser ?? loser;
+
+      if(gameOver){
+        setStatus("Estado: partida terminada 🤡");
+        showGameOverModal();
+        writeMatchHistoryOnce().then(loadLeaderboard);
+      }
+
+      renderAll();
+    }
+
+    function startRealtime(){
+      stopRealtime();
+      if(!roomId) return;
+
+      channel = supabase.channel("room_state_" + roomId);
+
+      channel
+        .on("postgres_changes", {
+          event: "*",
+          schema: "public",
+          table: "room_state",
+          filter: "room_id=eq." + roomId
+        }, (payload) => {
+          applyRoomRow(payload.new);
+        })
+        .subscribe((status) => {
+          console.log("realtime:", status);
+        });
+    }
+
+    setInterval(async ()=>{
+      if(!roomId) return;
+      if(channel) return;
+      await loadRoomState();
+    }, 2000);
+
+    // =========================
+    // 12) Leaderboard / historial
+    // =========================
+    function fmtDuration(sec){
+      sec = Math.max(0, sec|0);
+      const m = Math.floor(sec/60);
+      const s = sec % 60;
+      return m + "m " + String(s).padStart(2,"0") + "s";
+    }
+    function fmtDate(iso){
+      try{
+        const d = new Date(iso);
+        return d.toLocaleString();
+      } catch { return String(iso||""); }
+    }
+
+    async function loadLeaderboard(){
+      const { data, error } = await supabase
+        .from("matches")
+        .select("*")
+        .order("ended_at", { ascending: false })
+        .limit(200);
+
+      if(error){
+        console.error(error);
+        elLbBody.innerHTML = `<tr><td colspan="7" style="padding:12px 10px; opacity:.75;">Error cargando historial (F12)</td></tr>`;
+        return;
+      }
+
+      if(!data || data.length === 0){
+        elLbBody.innerHTML = `<tr><td colspan="7" style="padding:12px 10px; opacity:.75;">Sin partidas aún… juega una 😈</td></tr>`;
+        return;
+      }
+
+      elLbBody.innerHTML = data.map((r, idx) => {
+        return `
+          <tr>
+            <td>${idx+1}</td>
+            <td>${labelName(r.winner)}</td>
+            <td>${labelName(r.loser)}</td>
+            <td>${r.emy_score}</td>
+            <td>${r.diego_score}</td>
+            <td>${fmtDuration(r.duration_sec)}</td>
+            <td>${fmtDate(r.ended_at)}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    elBtnRefreshLB.addEventListener("click", loadLeaderboard);
+    setInterval(loadLeaderboard, 7000);
+
+    // =========================
+    // 13) Rooms: create / join
+    // =========================
+    function makeCode(){
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let s = "BB-";
+      for(let i=0;i<4;i++) s += chars[Math.floor(Math.random()*chars.length)];
+      return s;
+    }
+
+    async function createRoom(){
+      const who = normalizeName(elNameInput.value);
+      if(!who){
+        setStatus("Pon tu nombre como EMY o DIEGO 😭");
+        return;
+      }
+
+      player = who;
+      myName = who;
+
+      roomCode = makeCode();
+
+      const { data, error } = await supabase
+        .from("rooms")
+        .insert({ code: roomCode })
+        .select("*")
+        .single();
+
+      if(error){
+        console.error(error);
+        setStatus("Error creando sala (F12)");
+        return;
+      }
+
+      roomId = data.id;
+
+      emyScore = 0; diegoScore = 0;
+      emyGrid = emptyGrid();
+      diegoGrid = emptyGrid();
+
+      pieces = [null, null, null];
+      ensurePlayablePieces();
+
+      matchId = (crypto?.randomUUID?.() || ("m_" + Math.random().toString(16).slice(2)));
+      startedAt = new Date().toISOString();
+      endedAt = null;
+      gameOver = false;
+      winner = null; loser = null;
+      historyWritten = false;
+
+      const { error: err2 } = await supabase.from("room_state").upsert({
+        room_id: roomId,
+        emy_score: 0,
+        diego_score: 0,
+        emy_grid: gridToJson(emyGrid),
+        diego_grid: gridToJson(diegoGrid),
+        updated_at: new Date().toISOString(),
+        match_id: matchId,
+        started_at: startedAt,
+        ended_at: null,
+        game_over: false,
+        winner: null,
+        loser: null
+      }, { onConflict: "room_id" });
+
+      if(err2){
+        console.error(err2);
+        setStatus("Error creando estado (F12)");
+        return;
+      }
+
+      setStatus("Estado: sala creada. comparte el código 💗");
+      updateHeader();
+      renderAll();
+      startRealtime();
+      loadLeaderboard();
+    }
+
+    async function joinRoom(){
+      const who = normalizeName(elNameInput.value);
+      if(!who){
+        setStatus("Pon tu nombre como EMY o DIEGO 😭");
+        return;
+      }
+      const code = (elCodeInput.value || "").trim().toUpperCase();
+      if(!code){
+        setStatus("Pon el código de sala bb 🥺");
+        return;
+      }
+
+      player = who;
+      myName = who;
+      roomCode = code;
+
+      const { data, error } = await supabase
+        .from("rooms")
+        .select("*")
+        .eq("code", roomCode)
+        .maybeSingle();
+
+      if(error){
+        console.error(error);
+        setStatus("Error uniéndote (F12)");
+        return;
+      }
+      if(!data){
+        setStatus("No existe esa sala 😭 revisa el código");
+        return;
+      }
+
+      roomId = data.id;
+
+      await loadRoomState();
+
+      if(!gameOver){
+        pieces = [null, null, null];
+        ensurePlayablePieces();
+        selectedIndex = null;
+      }
+
+      renderAll();
+
+      setStatus(gameOver ? "Estado: partida terminada 🤡" : "Estado: unida a sala. a jugar 😈");
+      startRealtime();
+      loadLeaderboard();
+    }
+
+    // =========================
+    // 14) Buttons
+    // =========================
+    elBtnCreate.addEventListener("click", createRoom);
+    elBtnJoin.addEventListener("click", joinRoom);
+
+    function copyRoom(){
+      if(!roomCode){ toast("No hay código aún 🥺"); return; }
+      navigator.clipboard.writeText(roomCode).then(()=> toast("Código copiado 💗"));
+    }
+    elBtnCopyTop.addEventListener("click", copyRoom);
+    document.getElementById("pillRoom").addEventListener("click", copyRoom);
+
+    elBtnTheme.addEventListener("click", ()=>{
+      document.body.classList.toggle("night");
+      renderAll();
+      toast(document.body.classList.contains("night") ? "Modo Kuromi 🖤" : "Modo pastel ☁️");
+    });
+
+    document.getElementById("btnMini").addEventListener("click", ()=>{
+      liveMini = !liveMini;
+      toast(liveMini ? "Live mini ON 💜" : "Live mini OFF 💤");
+      renderAll();
+    });
+
+    elBtnDemo.addEventListener("click", ()=>{
+      if(!player || !roomId || gameOver) return;
+      addScore(player, 100);
+      queueSave();
+      renderAll();
+    });
+
+    // =========================
+    // 15) Init
+    // =========================
+    elNameInput.value = "EMY";
+    pieces = [null, null, null];
+    ensurePlayablePieces();
+    renderAll();
+    loadLeaderboard();
   </script>
 </body>
-</html>
+</html> 
