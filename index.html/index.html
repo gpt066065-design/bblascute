@@ -1311,40 +1311,46 @@
     }
 
     function queueSave(){
-      if(!roomId) return;
-      if(gameOver) return;
+  if(!roomId) return;
+  if(gameOver) return;
 
-      if(saveTimer) clearTimeout(saveTimer);
-      saveTimer = setTimeout(async ()=>{
-        saveTimer = null;
-        const now = Date.now();
-        if(now - lastSaved < 250) return;
-        lastSaved = now;
+  if(saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(async ()=>{
+    saveTimer = null;
+    const now = Date.now();
+    if(now - lastSaved < 250) return;
+    lastSaved = now;
 
-        const payload = {
-          room_id: roomId,
-          emy_score: emyScore,
-          diego_score: diegoScore,
-          emy_grid: gridToJson(emyGrid),
-          diego_grid: gridToJson(diegoGrid),
-          updated_at: new Date().toISOString(),
-          match_id: matchId,
-          started_at: startedAt,
-          game_over: false
-        };
+    const payload = {
+      room_id: roomId,
+      updated_at: new Date().toISOString(),
+      match_id: matchId,
+      started_at: startedAt,
+      game_over: false
+    };
 
-        const { error } = await supabase
-          .from("room_state")
-          .upsert(payload, { onConflict: "room_id" });
-
-        if(error){
-          console.error(error);
-          setStatus("Error guardando estado (F12)");
-        } else {
-          setStatus("Estado: jugando 💗");
-        }
-      }, 120);
+    // ✅ SOLO MI LADO (para que no se pisen)
+    if(player === "emy"){
+      payload.emy_score = emyScore;
+      payload.emy_grid  = gridToJson(emyGrid);
+    } else {
+      payload.diego_score = diegoScore;
+      payload.diego_grid  = gridToJson(diegoGrid);
     }
+
+    const { error } = await supabase
+      .from("room_state")
+      .upsert(payload, { onConflict: "room_id" });
+
+    if(error){
+      console.error(error);
+      setStatus("Error guardando estado (F12)");
+    } else {
+      setStatus("Estado: jugando 💗");
+    }
+  }, 120);
+}
+
 
     // =========================
     // 11) Realtime sync
