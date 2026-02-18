@@ -819,10 +819,9 @@
     // 6) Rendering blocks + preview
     // =========================
     function styleBlock(b){
-      // ✅ CAMBIO ÚNICO: piezas planas + borde finito (sin sombra) en día y noche
-      b.style.outline = "1px solid rgba(255,255,255,.38)";
+      /* ✅ CAMBIO ÚNICO: piezas planas + borde finito (sin sombra) */
+      b.style.outline = "1px solid rgba(255,255,255,.28)";
       b.style.boxShadow = "none";
-      b.style.backgroundImage = "none";
       b.style.filter = "none";
     }
 
@@ -1032,9 +1031,10 @@
     }
 
     /* TODO LO DEMÁS DE TU JS QUEDA EXACTO (sin cambios) */
-    // ... (resto igual)
+  
   </script>
 </body>
 </html>
+
 
 
