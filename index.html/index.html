@@ -820,7 +820,7 @@
     // =========================
     function styleBlock(b){
       /* ✅ CAMBIO ÚNICO: piezas planas + borde finito (sin sombra) */
-      b.style.outline = "1px solid rgba(255,255,255,.28)";
+      b.style.outline = getComputedStyle(document.documentElement).getPropertyValue("--block-outline").trim() || "1px solid rgba(255,255,255,.45)";
       b.style.boxShadow = "none";
       b.style.filter = "none";
     }
@@ -1029,9 +1029,9 @@
         elPieces.appendChild(card);
       }
     }
+
+    /* TODO LO DEMÁS DE TU JS QUEDA EXACTO (sin cambios) */
+    // ... (resto igual)
   </script>
 </body>
 </html>
-
-
-
