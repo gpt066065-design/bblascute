@@ -1,4 +1,4 @@
-<!doctype html>
+<!doctype html> 
 <html lang="es">
 <head>
   <meta charset="utf-8" />
@@ -819,9 +819,10 @@
     // 6) Rendering blocks + preview
     // =========================
     function styleBlock(b){
-      /* ✅ CAMBIO ÚNICO: piezas planas + borde finito (sin sombra) */
-      b.style.outline = getComputedStyle(document.documentElement).getPropertyValue("--block-outline").trim() || "1px solid rgba(255,255,255,.45)";
+      // ✅ CAMBIO ÚNICO: piezas planas + borde finito (sin sombra) en día y noche
+      b.style.outline = "1px solid rgba(255,255,255,.38)";
       b.style.boxShadow = "none";
+      b.style.backgroundImage = "none";
       b.style.filter = "none";
     }
 
