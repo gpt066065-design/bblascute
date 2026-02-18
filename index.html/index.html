@@ -47,7 +47,6 @@
       background-attachment: fixed;
       overflow-x:hidden;
     }
-
     body.night{
       color: rgba(255,255,255,.88);
       background:
@@ -116,6 +115,7 @@
       box-shadow: 0 10px 28px rgba(0,0,0,.08);
       user-select:none;
       font-weight: 800;
+      cursor: default;
     }
     body.night .pill{
       background: var(--pillNight);
@@ -161,7 +161,7 @@
       background: var(--btn);
       color: var(--btnText);
       box-shadow: 0 14px 32px rgba(0,0,0,.12);
-      transition: transform .08s ease, filter .08s ease;
+      transition: transform .08s ease, filter .08s ease, opacity .08s ease;
     }
     button:active{ transform: scale(.98); filter: brightness(.98); }
     button.secondary{
@@ -173,6 +173,7 @@
       color: rgba(255,255,255,.88);
       border: 1px solid rgba(255,255,255,.14);
     }
+    button:disabled{ opacity: .55; cursor: not-allowed; }
 
     .status{
       text-align:center;
@@ -224,6 +225,7 @@
       gap: 10px;
       align-items:center;
     }
+
     .scorebar{
       display:flex;
       align-items:center;
@@ -241,6 +243,7 @@
       border-color: rgba(255,255,255,.14);
     }
     .scorebar span{ opacity:.95; }
+
     .scoreChip{
       padding: 6px 10px;
       border-radius: 999px;
@@ -250,6 +253,7 @@
       align-items:center;
       gap: 8px;
       font-weight: 950;
+      user-select:none;
     }
     body.night .scoreChip{
       background: rgba(0,0,0,.24);
@@ -294,7 +298,6 @@
       border: 2px solid rgba(233, 215, 255, .18);
     }
 
-    /* blocks are always square */
     .block{
       position:absolute;
       width: 10%;
@@ -307,6 +310,29 @@
       pointer-events:none;
       border-radius: 6px;
       mix-blend-mode: normal;
+    }
+
+    /* FX layer */
+    .fxLayer{
+      position:absolute;
+      inset: 12px;
+      pointer-events:none;
+      z-index: 25;
+      overflow:hidden;
+      border-radius: var(--grid-radius);
+    }
+    .fxP{
+      position:absolute;
+      font-size: 18px;
+      will-change: transform, opacity;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,.25));
+      opacity: 0;
+      animation: popFly 720ms ease-out forwards;
+    }
+    @keyframes popFly{
+      0%   { transform: translate(-50%,-50%) scale(.55) rotate(0deg); opacity: 0; }
+      15%  { opacity: 1; }
+      100% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1.15) rotate(var(--rot)); opacity: 0; }
     }
 
     .pieces{
@@ -346,11 +372,7 @@
       box-shadow: 0 18px 40px rgba(255, 106, 168, .22);
     }
 
-    /* empty slot (cuando ya usaste esa pieza) */
-    .pieceCard.empty{
-      cursor: default;
-      opacity: .55;
-    }
+    .pieceCard.empty{ cursor: default; opacity: .55; }
     .emptyMark{
       font-weight: 950;
       opacity: .7;
@@ -382,18 +404,8 @@
       filter: drop-shadow(0 18px 25px rgba(0,0,0,.18));
       z-index: 1;
     }
-    .sticker.cinna{
-      left: 18px;
-      bottom: 18px;
-      width: 140px;
-      display:block;
-    }
-    .sticker.kuromi{
-      right: 18px;
-      bottom: 18px;
-      width: 140px;
-      display:none;
-    }
+    .sticker.cinna{ left: 18px; bottom: 18px; width: 140px; display:block; }
+    .sticker.kuromi{ right: 18px; bottom: 18px; width: 140px; display:none; }
     body.night .sticker.cinna{ display:none; }
     body.night .sticker.kuromi{ display:block; }
 
@@ -417,6 +429,88 @@
       opacity: 1;
       transform: translateX(-50%) translateY(-6px);
     }
+
+    /* GAME OVER modal */
+    .modalBack{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      padding: 18px;
+    }
+    .modalBack.show{ display:flex; }
+    .modal{
+      width: min(520px, 96vw);
+      border-radius: 24px;
+      border: 1px solid rgba(255,255,255,.18);
+      background: rgba(10, 4, 18, .72);
+      color: rgba(255,255,255,.92);
+      box-shadow: 0 26px 90px rgba(0,0,0,.55);
+      padding: 16px;
+      backdrop-filter: blur(14px);
+    }
+    .modal h2{
+      margin: 8px 0 8px;
+      font-size: 28px;
+      font-weight: 1000;
+    }
+    .modal p{
+      margin: 0 0 12px;
+      font-weight: 850;
+      opacity: .9;
+      line-height: 1.25;
+    }
+    .modalRow{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items:center;
+      justify-content:flex-end;
+    }
+
+    /* Leaderboard */
+    .leaderTitle{
+      font-weight: 1000;
+      margin: 4px 0 10px;
+      opacity: .95;
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .tableWrap{
+      overflow:auto;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.14);
+    }
+    table{
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 520px;
+      font-size: 12.5px;
+      font-weight: 850;
+    }
+    thead th{
+      position: sticky;
+      top: 0;
+      background: rgba(0,0,0,.20);
+      backdrop-filter: blur(10px);
+      text-align:left;
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.12);
+      white-space: nowrap;
+    }
+    tbody td{
+      padding: 9px 10px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      white-space: nowrap;
+      opacity: .92;
+    }
+    tbody tr:hover td{ background: rgba(255,255,255,.06); }
   </style>
 </head>
 
@@ -430,7 +524,7 @@
     <div class="topPanel">
       <div class="leftPills">
         <div class="pill" id="pillScore">EMY 🎀 <span id="emyScoreTop">0</span> vs <span id="diegoScoreTop">0</span> DIEGO 🍭</div>
-        <div class="pill" id="pillRoom">ROOM: <span id="roomCodeTop">—</span></div>
+        <div class="pill" id="pillRoom" style="cursor:pointer;">ROOM: <span id="roomCodeTop">—</span></div>
         <button class="secondary" id="btnCopyTop">📋 Copiar</button>
         <button class="secondary" id="btnTheme">🖤 Kuromi</button>
       </div>
@@ -466,6 +560,7 @@
 
         <div class="gridWrap">
           <div id="myGrid" class="grid"></div>
+          <div id="fxMy" class="fxLayer"></div>
         </div>
 
         <div class="pieces" id="pieces"></div>
@@ -486,9 +581,48 @@
         <div class="miniNote">Se actualiza cuando el rival juega 💜</div>
       </div>
     </div>
+
+    <div style="height:14px"></div>
+
+    <div class="card">
+      <div class="leaderTitle">
+        <div>🏆 Tabla de posiciones (historial completo)</div>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <button class="secondary" id="btnRefreshLB">🔄 Actualizar</button>
+        </div>
+      </div>
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Ganador</th>
+              <th>Perdedor</th>
+              <th>EMY</th>
+              <th>DIEGO</th>
+              <th>Duración</th>
+              <th>Terminó</th>
+            </tr>
+          </thead>
+          <tbody id="lbBody">
+            <tr><td colspan="7" style="padding:12px 10px; opacity:.75;">Sin partidas aún… juega una 😈</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </div>
 
   <div class="toast" id="toast">Copiado ✨</div>
+
+  <div class="modalBack" id="modalBack">
+    <div class="modal">
+      <h2 id="modalTitle">PERDISTE! 🤡</h2>
+      <p id="modalText">PERDISTE! TAL GANÓ 🤡</p>
+      <div class="modalRow">
+        <button class="secondary" id="btnCloseModal">Cerrar</button>
+      </div>
+    </div>
+  </div>
 
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
@@ -514,6 +648,7 @@
     const elBtnJoin = document.getElementById("btnJoin");
     const elBtnCopyTop = document.getElementById("btnCopyTop");
     const elBtnTheme = document.getElementById("btnTheme");
+    const elBtnRefreshLB = document.getElementById("btnRefreshLB");
 
     const elRoomCodeTop = document.getElementById("roomCodeTop");
     const elEmyTop = document.getElementById("emyScoreTop");
@@ -532,6 +667,14 @@
 
     const elBtnDemo = document.getElementById("btnDemo");
     const elToast = document.getElementById("toast");
+
+    const elFxMy = document.getElementById("fxMy");
+    const elLbBody = document.getElementById("lbBody");
+
+    const elModalBack = document.getElementById("modalBack");
+    const elModalTitle = document.getElementById("modalTitle");
+    const elModalText = document.getElementById("modalText");
+    const elBtnCloseModal = document.getElementById("btnCloseModal");
 
     // =========================
     // 3) Game state
@@ -562,6 +705,15 @@
     let saveTimer = null;
     let lastSaved = 0;
 
+    // match/game status
+    let matchId = null;
+    let startedAt = null;
+    let endedAt = null;
+    let gameOver = false;
+    let winner = null; // 'emy' | 'diego'
+    let loser = null;  // 'emy' | 'diego'
+    let historyWritten = false;
+
     // =========================
     // 4) Helpers UI
     // =========================
@@ -580,6 +732,12 @@
       return null;
     }
 
+    function otherPlayer(p){ return p === "emy" ? "diego" : "emy"; }
+
+    function labelName(p){
+      return p === "emy" ? "EMY" : "DIEGO";
+    }
+
     function updateHeader(){
       elRoomCodeTop.textContent = roomCode || "—";
       elEmyTop.textContent = String(emyScore);
@@ -589,6 +747,14 @@
 
       elMyLabel.textContent = player === "emy" ? "Tu tablero 🎀 (EMY)" : player === "diego" ? "Tu tablero 🍭 (DIEGO)" : "Tu tablero 🎀";
       elRivalLabel.textContent = player === "emy" ? "Rival 🍭 (DIEGO)" : player === "diego" ? "Rival 🎀 (EMY)" : "Rival 🍭";
+
+      // bloquear controles si game over
+      const disabled = !!gameOver;
+      elBtnCreate.disabled = disabled;
+      elBtnJoin.disabled = disabled;
+      elBtnDemo.disabled = disabled;
+      elNameInput.disabled = disabled;
+      elCodeInput.disabled = disabled;
     }
 
     function gridToJson(g){ return g.map(row => row.join("")); }
@@ -606,23 +772,53 @@
     }
 
     // =========================
-    // 5) Rendering blocks + preview
+    // 5) FX (estrellas + corazoncitos)
     // =========================
-    function styleBlock(b, isNight){
-      // “modo claro look” pero visible en noche
-      if(isNight){
-        b.style.outline = "2px solid rgba(255,255,255,.65)";
-        b.style.boxShadow = "0 14px 26px rgba(0,0,0,.60), 0 0 18px rgba(255,106,168,.30)";
-      } else {
-        b.style.outline = "1px solid rgba(255,255,255,.55)";
-        b.style.boxShadow = "0 10px 18px rgba(0,0,0,.12)";
+    const FX_EMOJIS = ["✨","💖","💗","⭐","🌟","💞","🫧","🎀"];
+
+    function rand(min,max){ return Math.random()*(max-min)+min; }
+
+    function spawnClearFX(linesCleared){
+      if(linesCleared <= 0) return;
+      const count = Math.min(60, 14 + linesCleared*12);
+
+      const rect = elFxMy.getBoundingClientRect();
+      const cx = rect.width * 0.5;
+      const cy = rect.height * 0.45;
+
+      for(let i=0;i<count;i++){
+        const p = document.createElement("div");
+        p.className = "fxP";
+        p.textContent = FX_EMOJIS[Math.floor(Math.random()*FX_EMOJIS.length)];
+
+        p.style.left = cx + "px";
+        p.style.top = cy + "px";
+        p.style.setProperty("--dx", rand(-150, 150) + "px");
+        p.style.setProperty("--dy", rand(-170, -25) + "px");
+        p.style.setProperty("--rot", rand(-260, 260) + "deg");
+
+        const isNight = document.body.classList.contains("night");
+        p.style.fontSize = (isNight ? rand(18, 28) : rand(16, 26)) + "px";
+
+        elFxMy.appendChild(p);
+        p.addEventListener("animationend", ()=> p.remove(), { once:true });
       }
+    }
+
+    // =========================
+    // 6) Rendering blocks + preview
+    // =========================
+    function styleBlock(b){
+      const isNight = document.body.classList.contains("night");
+      // MISMO LOOK bonito en noche y día
+      b.style.outline = isNight ? "2px solid rgba(255,255,255,.62)" : "1px solid rgba(255,255,255,.55)";
+      b.style.boxShadow = isNight
+        ? "0 14px 26px rgba(0,0,0,.62), 0 0 18px rgba(255,106,168,.22)"
+        : "0 10px 18px rgba(0,0,0,.12)";
     }
 
     function renderBlocks(container, g, color){
       container.querySelectorAll(".block").forEach(b => b.remove());
-      const isNight = document.body.classList.contains("night");
-
       for(let y=0;y<SIZE;y++){
         for(let x=0;x<SIZE;x++){
           if(g[y][x]){
@@ -631,7 +827,7 @@
             b.style.left = (x*10) + "%";
             b.style.top  = (y*10) + "%";
             b.style.background = color;
-            styleBlock(b, isNight);
+            styleBlock(b);
             container.appendChild(b);
           }
         }
@@ -641,7 +837,6 @@
     function renderPreview(container, pts, ox, oy, ok=true){
       container.querySelectorAll(".preview").forEach(b => b.remove());
       if(!pts) return;
-
       const isNight = document.body.classList.contains("night");
 
       for(const pt of pts){
@@ -654,15 +849,13 @@
         b.style.left = (x*10) + "%";
         b.style.top  = (y*10) + "%";
 
-        // Preview muy visible
         if(ok){
-          b.style.background = isNight ? "rgba(255,106,168,.28)" : "rgba(255,106,168,.25)";
-          b.style.outline = isNight ? "2px dashed rgba(255,255,255,.75)" : "2px dashed rgba(255,255,255,.65)";
+          b.style.background = isNight ? "rgba(255,106,168,.26)" : "rgba(255,106,168,.22)";
+          b.style.outline = isNight ? "2px dashed rgba(255,255,255,.80)" : "2px dashed rgba(255,255,255,.65)";
         } else {
           b.style.background = isNight ? "rgba(255,60,120,.18)" : "rgba(200,50,80,.18)";
-          b.style.outline = "2px dashed rgba(255,120,180,.65)";
+          b.style.outline = "2px dashed rgba(255,120,180,.70)";
         }
-
         b.style.boxShadow = "none";
         container.appendChild(b);
       }
@@ -671,7 +864,6 @@
     function renderAll(){
       updateHeader();
 
-      // mismo look de piezas en día y noche (tu pedido)
       const myColor = "#ff6aa8";
       const rivalColor = "#b9a5ff";
 
@@ -690,7 +882,7 @@
     }
 
     // =========================
-    // 6) Pieces (con orientaciones aleatorias)
+    // 7) Pieces (con orientaciones aleatorias)
     // =========================
     const SHAPES = [
       [{x:0,y:0}],
@@ -712,51 +904,21 @@
 
     function normalizePts(pts){
       let minX = Infinity, minY = Infinity;
-      let maxX = -Infinity, maxY = -Infinity;
-
-      for(const p of pts){
-        minX = Math.min(minX, p.x);
-        minY = Math.min(minY, p.y);
-        maxX = Math.max(maxX, p.x);
-        maxY = Math.max(maxY, p.y);
-      }
+      for(const p of pts){ minX = Math.min(minX, p.x); minY = Math.min(minY, p.y); }
       const out = pts.map(p => ({ x: p.x - minX, y: p.y - minY }));
-
-      // recompute bounds after normalize
       let w = 0, h = 0;
-      for(const p of out){
-        w = Math.max(w, p.x + 1);
-        h = Math.max(h, p.y + 1);
-      }
+      for(const p of out){ w = Math.max(w, p.x+1); h = Math.max(h, p.y+1); }
       return { pts: out, w, h };
     }
-
-    function rotate90(pts){
-      // (x,y) -> (y, -x)
-      return pts.map(p => ({ x: p.y, y: -p.x }));
-    }
-
-    function mirrorX(pts){
-      // (x,y) -> (-x, y)
-      return pts.map(p => ({ x: -p.x, y: p.y }));
-    }
-
-    function randomOrientedPieceFrom(shapePts){
-      let pts = JSON.parse(JSON.stringify(shapePts));
-
-      // 50% mirror (para L/J, S/Z, etc)
-      if(Math.random() < 0.5) pts = mirrorX(pts);
-
-      // rotate 0/90/180/270
-      const r = Math.floor(Math.random() * 4);
-      for(let i=0;i<r;i++) pts = rotate90(pts);
-
-      return normalizePts(pts);
-    }
+    function rotate90(pts){ return pts.map(p => ({ x: p.y, y: -p.x })); }
+    function mirrorX(pts){ return pts.map(p => ({ x: -p.x, y: p.y })); }
 
     function randomPiece(){
-      const base = SHAPES[Math.floor(Math.random()*SHAPES.length)];
-      return randomOrientedPieceFrom(base);
+      let pts = JSON.parse(JSON.stringify(SHAPES[Math.floor(Math.random()*SHAPES.length)]));
+      if(Math.random() < 0.5) pts = mirrorX(pts);
+      const r = Math.floor(Math.random()*4);
+      for(let i=0;i<r;i++) pts = rotate90(pts);
+      return normalizePts(pts);
     }
 
     function canPlace(grid, pts, ox, oy){
@@ -782,9 +944,6 @@
     }
 
     function ensurePlayablePieces(){
-      // Re-roll sets ENTEROS hasta que:
-      //  - al menos 1 de las 3 quepa (BlockBlast feeling)
-      //  - y SOLO se llama cuando el set está vacío (o al inicio)
       const g = myActiveGrid();
 
       for(let tries=0; tries<80; tries++){
@@ -795,8 +954,6 @@
           return;
         }
       }
-
-      // fallback
       pieces = [randomPiece(), randomPiece(), randomPiece()];
       selectedIndex = null;
     }
@@ -804,16 +961,15 @@
     function renderPieces(){
       elPieces.innerHTML = "";
 
-      // si está vacío (inicio) generamos; si no, NO TOCAMOS el set aunque haya nulls
       if(!Array.isArray(pieces) || pieces.length !== 3 || pieces.every(p => p === null)){
         ensurePlayablePieces();
       }
 
       for(let i=0;i<3;i++){
         const piece = pieces[i];
+        const isEmpty = !piece;
 
         const card = document.createElement("div");
-        const isEmpty = !piece;
         card.className = "pieceCard" +
           (selectedIndex===i ? " selected" : "") +
           (isEmpty ? " empty" : "");
@@ -825,14 +981,12 @@
         mini.style.position = "relative";
 
         if(piece){
-          // centrar en un grid 6x6 para que no se vea estirada
           const gridSize = 6;
           const cell = 72 / gridSize;
 
           const offsetX = ((gridSize - piece.w) / 2) * cell;
           const offsetY = ((gridSize - piece.h) / 2) * cell;
 
-          const isNight = document.body.classList.contains("night");
           const col = "#ff6aa8";
 
           for(const p of piece.pts){
@@ -845,30 +999,21 @@
             b.style.aspectRatio = "1/1";
             b.style.borderRadius = "6px";
             b.style.background = col;
-
-            if(isNight){
-              b.style.outline = "2px solid rgba(255,255,255,.65)";
-              b.style.boxShadow = "0 12px 22px rgba(0,0,0,.60), 0 0 14px rgba(255,106,168,.28)";
-            } else {
-              b.style.outline = "1px solid rgba(255,255,255,.55)";
-              b.style.boxShadow = "0 10px 16px rgba(0,0,0,.10)";
-            }
+            styleBlock(b);
             mini.appendChild(b);
           }
 
           card.addEventListener("pointerdown", (e)=>{
             e.preventDefault();
+            if(gameOver) return;
             selectedIndex = (selectedIndex===i ? null : i);
             renderAll();
           });
         } else {
-          // slot vacío (ya la usaste) -> no seleccionable
           const mark = document.createElement("div");
           mark.className = "emptyMark";
           mark.textContent = "usada ✨";
           mini.appendChild(mark);
-
-          // si estaba seleccionada y se gastó, limpiamos
           if(selectedIndex === i) selectedIndex = null;
         }
 
@@ -878,7 +1023,106 @@
     }
 
     // =========================
-    // 7) Placement logic + scoring
+    // 8) Game Over logic (el bug que viste)
+    // =========================
+    function anyMoveAvailableNow(){
+      if(!player) return true;
+      const g = myActiveGrid();
+      const livePieces = pieces.filter(p => p !== null);
+      if(livePieces.length === 0) return true; // si no hay piezas, se refill-ea
+      return livePieces.some(p => anyPlacementExists(g, p));
+    }
+
+    async function endGame(loserName){
+      if(!roomId) return;
+      if(gameOver) return; // ya terminó
+      const win = otherPlayer(loserName);
+
+      gameOver = true;
+      winner = win;
+      loser = loserName;
+      endedAt = new Date().toISOString();
+
+      // actualizar room_state (esto se sync-ea al rival por realtime)
+      const payload = {
+        room_id: roomId,
+        emy_score: emyScore,
+        diego_score: diegoScore,
+        emy_grid: gridToJson(emyGrid),
+        diego_grid: gridToJson(diegoGrid),
+        updated_at: new Date().toISOString(),
+        game_over: true,
+        winner: winner,
+        loser: loserName,
+        ended_at: endedAt
+      };
+
+      const { error } = await supabase
+        .from("room_state")
+        .upsert(payload, { onConflict: "room_id" });
+
+      if(error){
+        console.error(error);
+        setStatus("Error guardando game over (F12)");
+      } else {
+        setStatus("Estado: partida terminada 🤡");
+      }
+
+      showGameOverModal();
+      await writeMatchHistoryOnce();
+      await loadLeaderboard();
+      renderAll();
+    }
+
+    function showGameOverModal(){
+      if(!winner || !loser) return;
+
+      const youLost = (player === loser);
+      const winLabel = labelName(winner);
+
+      elModalTitle.textContent = youLost ? "PERDISTE! 🤡" : "GANASTE! 🤡";
+      elModalText.textContent = (youLost ? `PERDISTE! ${winLabel} GANÓ 🤡` : `${winLabel} GANÓ 🤡`);
+      elModalBack.classList.add("show");
+    }
+
+    elBtnCloseModal.addEventListener("click", ()=> elModalBack.classList.remove("show"));
+
+    async function writeMatchHistoryOnce(){
+      if(historyWritten) return;
+      if(!matchId || !startedAt || !endedAt || !winner || !loser) return;
+
+      const start = new Date(startedAt).getTime();
+      const end = new Date(endedAt).getTime();
+      const durationSec = Math.max(0, Math.floor((end - start)/1000));
+
+      const row = {
+        match_id: matchId,
+        room_id: roomId,
+        room_code: roomCode,
+        started_at: startedAt,
+        ended_at: endedAt,
+        duration_sec: durationSec,
+        winner: winner,
+        loser: loser,
+        emy_score: emyScore,
+        diego_score: diegoScore
+      };
+
+      // insert (si ya existe, no pasa nada)
+      const { error } = await supabase
+        .from("matches")
+        .insert(row);
+
+      if(error){
+        // si es "duplicate key" ignoramos
+        console.warn("matches insert:", error.message);
+      } else {
+        historyWritten = true;
+      }
+    }
+
+    // =========================
+    // 9) Placement logic + scoring
     // =========================
     function doPlace(grid, pts, ox, oy){
       for(const p of pts){
@@ -922,6 +1166,7 @@
     }
 
     function placePieceAtCell(cellX, cellY){
+      if(gameOver) return false;
       if(selectedIndex === null) return false;
       const piece = pieces[selectedIndex];
       if(!piece) return false;
@@ -936,17 +1181,23 @@
       const pts = piece.pts.length + (lines * 10);
       addScore(player, pts);
 
-      // consume piece: queda slot vacío hasta que uses las 3
+      if(lines > 0) spawnClearFX(lines);
+
       pieces[selectedIndex] = null;
       selectedIndex = null;
 
-      // SOLO cuando usas las 3, salen nuevas (BlockBlast)
       if(pieces.every(p => p === null)){
         ensurePlayablePieces();
       }
 
       queueSave();
       renderAll();
+
+      // ✅ BUG FIX: si después del movimiento ya no hay jugadas posibles con las piezas actuales -> PERDISTE
+      if(!anyMoveAvailableNow()){
+        endGame(player);
+      }
+
       return true;
     }
 
@@ -961,6 +1212,7 @@
 
     function attachBoard(){
       elMyGrid.addEventListener("pointermove", (ev) => {
+        if(gameOver) return;
         if(selectedIndex === null) {
           elMyGrid.querySelectorAll(".preview").forEach(b => b.remove());
           return;
@@ -978,6 +1230,7 @@
       });
 
       elMyGrid.addEventListener("pointerdown", async (ev) => {
+        if(gameOver) return;
         if(!player || !roomId) return;
         if(selectedIndex === null) return;
 
@@ -995,7 +1248,7 @@
     attachBoard();
 
     // =========================
-    // 8) Saving / Loading
+    // 10) Saving / Loading
     // =========================
     async function loadRoomState(){
       if(!roomId) return;
@@ -1013,13 +1266,20 @@
       }
 
       if(!data){
+        // crea estado base
+        startedAt = new Date().toISOString();
+        matchId = (crypto?.randomUUID?.() || ("m_" + Math.random().toString(16).slice(2)));
+
         await supabase.from("room_state").insert({
           room_id: roomId,
           emy_score: 0,
           diego_score: 0,
           emy_grid: gridToJson(emyGrid),
           diego_grid: gridToJson(diegoGrid),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          match_id: matchId,
+          started_at: startedAt,
+          game_over: false
         });
         return;
       }
@@ -1029,11 +1289,27 @@
       emyGrid = jsonToGrid(data.emy_grid);
       diegoGrid = jsonToGrid(data.diego_grid);
 
+      matchId = data.match_id ?? matchId;
+      startedAt = data.started_at ?? startedAt;
+      endedAt = data.ended_at ?? endedAt;
+      gameOver = !!data.game_over;
+      winner = data.winner ?? winner;
+      loser = data.loser ?? loser;
+
+      if(gameOver){
+        setStatus("Estado: partida terminada 🤡");
+        showGameOverModal();
+        // intenta escribir historial (por si el otro ya lo escribió, no pasa nada)
+        await writeMatchHistoryOnce();
+        await loadLeaderboard();
+      }
+
       renderAll();
     }
 
     function queueSave(){
       if(!roomId) return;
+      if(gameOver) return;
 
       if(saveTimer) clearTimeout(saveTimer);
       saveTimer = setTimeout(async ()=>{
@@ -1048,7 +1324,10 @@
           diego_score: diegoScore,
           emy_grid: gridToJson(emyGrid),
           diego_grid: gridToJson(diegoGrid),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
+          match_id: matchId,
+          started_at: startedAt,
+          game_over: false
         };
 
         const { error } = await supabase
@@ -1065,13 +1344,38 @@
     }
 
     // =========================
-    // 9) Realtime sync
+    // 11) Realtime sync
     // =========================
     function stopRealtime(){
       if(channel){
         supabase.removeChannel(channel);
         channel = null;
       }
+    }
+
+    function applyRoomRow(row){
+      if(!row) return;
+
+      emyScore = row.emy_score ?? emyScore;
+      diegoScore = row.diego_score ?? diegoScore;
+      emyGrid = jsonToGrid(row.emy_grid);
+      diegoGrid = jsonToGrid(row.diego_grid);
+
+      matchId = row.match_id ?? matchId;
+      startedAt = row.started_at ?? startedAt;
+      endedAt = row.ended_at ?? endedAt;
+
+      gameOver = !!row.game_over;
+      winner = row.winner ?? winner;
+      loser = row.loser ?? loser;
+
+      if(gameOver){
+        setStatus("Estado: partida terminada 🤡");
+        showGameOverModal();
+        writeMatchHistoryOnce().then(loadLeaderboard);
+      }
+
+      renderAll();
     }
 
     function startRealtime(){
@@ -1087,15 +1391,7 @@
           table: "room_state",
           filter: "room_id=eq." + roomId
         }, (payload) => {
-          const row = payload.new;
-          if(!row) return;
-
-          emyScore = row.emy_score ?? emyScore;
-          diegoScore = row.diego_score ?? diegoScore;
-          emyGrid = jsonToGrid(row.emy_grid);
-          diegoGrid = jsonToGrid(row.diego_grid);
-
-          renderAll();
+          applyRoomRow(payload.new);
         })
         .subscribe((status) => {
           console.log("realtime:", status);
@@ -1109,7 +1405,59 @@
     }, 2000);
 
     // =========================
-    // 10) Rooms: create / join
+    // 12) Leaderboard / historial
+    // =========================
+    function fmtDuration(sec){
+      sec = Math.max(0, sec|0);
+      const m = Math.floor(sec/60);
+      const s = sec % 60;
+      return m + "m " + String(s).padStart(2,"0") + "s";
+    }
+    function fmtDate(iso){
+      try{
+        const d = new Date(iso);
+        return d.toLocaleString();
+      } catch { return String(iso||""); }
+    }
+
+    async function loadLeaderboard(){
+      const { data, error } = await supabase
+        .from("matches")
+        .select("*")
+        .order("ended_at", { ascending: false })
+        .limit(200);
+
+      if(error){
+        console.error(error);
+        elLbBody.innerHTML = `<tr><td colspan="7" style="padding:12px 10px; opacity:.75;">Error cargando historial (F12)</td></tr>`;
+        return;
+      }
+
+      if(!data || data.length === 0){
+        elLbBody.innerHTML = `<tr><td colspan="7" style="padding:12px 10px; opacity:.75;">Sin partidas aún… juega una 😈</td></tr>`;
+        return;
+      }
+
+      elLbBody.innerHTML = data.map((r, idx) => {
+        return `
+          <tr>
+            <td>${idx+1}</td>
+            <td>${labelName(r.winner)}</td>
+            <td>${labelName(r.loser)}</td>
+            <td>${r.emy_score}</td>
+            <td>${r.diego_score}</td>
+            <td>${fmtDuration(r.duration_sec)}</td>
+            <td>${fmtDate(r.ended_at)}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    elBtnRefreshLB.addEventListener("click", loadLeaderboard);
+    setInterval(loadLeaderboard, 7000);
+
+    // =========================
+    // 13) Rooms: create / join
     // =========================
     function makeCode(){
       const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -1151,13 +1499,27 @@
       pieces = [null, null, null];
       ensurePlayablePieces();
 
+      // new match
+      matchId = (crypto?.randomUUID?.() || ("m_" + Math.random().toString(16).slice(2)));
+      startedAt = new Date().toISOString();
+      endedAt = null;
+      gameOver = false;
+      winner = null; loser = null;
+      historyWritten = false;
+
       const { error: err2 } = await supabase.from("room_state").upsert({
         room_id: roomId,
         emy_score: 0,
         diego_score: 0,
         emy_grid: gridToJson(emyGrid),
         diego_grid: gridToJson(diegoGrid),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
+        match_id: matchId,
+        started_at: startedAt,
+        ended_at: null,
+        game_over: false,
+        winner: null,
+        loser: null
       }, { onConflict: "room_id" });
 
       if(err2){
@@ -1170,6 +1532,7 @@
       updateHeader();
       renderAll();
       startRealtime();
+      loadLeaderboard();
     }
 
     async function joinRoom(){
@@ -1208,17 +1571,21 @@
 
       await loadRoomState();
 
-      pieces = [null, null, null];
-      ensurePlayablePieces();
-      selectedIndex = null;
+      if(!gameOver){
+        pieces = [null, null, null];
+        ensurePlayablePieces();
+        selectedIndex = null;
+      }
+
       renderAll();
 
-      setStatus("Estado: unida a sala. a jugar 😈");
+      setStatus(gameOver ? "Estado: partida terminada 🤡" : "Estado: unida a sala. a jugar 😈");
       startRealtime();
+      loadLeaderboard();
     }
 
     // =========================
-    // 11) Buttons
+    // 14) Buttons
     // =========================
     elBtnCreate.addEventListener("click", createRoom);
     elBtnJoin.addEventListener("click", joinRoom);
@@ -1243,26 +1610,20 @@
     });
 
     elBtnDemo.addEventListener("click", ()=>{
-      if(!player || !roomId) return;
+      if(!player || !roomId || gameOver) return;
       addScore(player, 100);
       queueSave();
       renderAll();
     });
 
     // =========================
-    // 12) Init
+    // 15) Init
     // =========================
     elNameInput.value = "EMY";
     pieces = [null, null, null];
     ensurePlayablePieces();
     renderAll();
+    loadLeaderboard();
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
