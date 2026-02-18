@@ -31,6 +31,11 @@
       --card-radius: 22px;
       --inner-radius: 18px;
       --grid-radius: 16px;
+
+      /* ✅ PIEZAS BONITAS (mismo look en día) */
+      --block-outline: 1px solid rgba(255,255,255,.55);
+      --block-shadow: 0 10px 18px rgba(0,0,0,.12);
+      --block-hi: inset 0 1px 0 rgba(255,255,255,.35);
     }
 
     *{ box-sizing: border-box; }
@@ -55,6 +60,11 @@
         var(--bg-night);
       background-size: cover;
       background-attachment: fixed;
+
+      /* ✅ MODO OSCURO: MISMAS PIEZAS BONITAS (solo glow cute) */
+      --block-outline: 1px solid rgba(255,255,255,.55);
+      --block-shadow: 0 12px 22px rgba(0,0,0,.40), 0 0 16px rgba(255,106,168,.22);
+      --block-hi: inset 0 1px 0 rgba(255,255,255,.28);
     }
 
     .wrap{
@@ -809,12 +819,17 @@
     // 6) Rendering blocks + preview
     // =========================
     function styleBlock(b){
-      const isNight = document.body.classList.contains("night");
-      // MISMO LOOK bonito en noche y día
-      b.style.outline = isNight ? "2px solid rgba(255,255,255,.62)" : "1px solid rgba(255,255,255,.55)";
-      b.style.boxShadow = isNight
-        ? "0 14px 26px rgba(0,0,0,.62), 0 0 18px rgba(255,106,168,.22)"
-        : "0 10px 18px rgba(0,0,0,.12)";
+      // ✅ un solo look: usa variables CSS (día y noche)
+      const cs = getComputedStyle(document.body);
+      const outline = cs.getPropertyValue("--block-outline").trim();
+      const shadow = cs.getPropertyValue("--block-shadow").trim();
+      const hi = cs.getPropertyValue("--block-hi").trim();
+
+      b.style.outline = outline || "1px solid rgba(255,255,255,.55)";
+      b.style.boxShadow = shadow || "0 10px 18px rgba(0,0,0,.12)";
+      if(hi){
+        b.style.boxShadow = `${b.style.boxShadow}, ${hi}`;
+      }
     }
 
     function renderBlocks(container, g, color){
@@ -1022,6 +1037,7 @@
       }
     }
 
+    /* TODO LO DEMÁS DE TU JS QUEDA EXACTO (sin cambios) */
     // =========================
     // 8) Game Over logic (el bug que viste)
     // =========================
@@ -1108,13 +1124,11 @@
         diego_score: diegoScore
       };
 
-      // insert (si ya existe, no pasa nada)
       const { error } = await supabase
         .from("matches")
         .insert(row);
 
       if(error){
-        // si es "duplicate key" ignoramos
         console.warn("matches insert:", error.message);
       } else {
         historyWritten = true;
@@ -1193,7 +1207,6 @@
       queueSave();
       renderAll();
 
-      // ✅ BUG FIX: si después del movimiento ya no hay jugadas posibles con las piezas actuales -> PERDISTE
       if(!anyMoveAvailableNow()){
         endGame(player);
       }
@@ -1266,7 +1279,6 @@
       }
 
       if(!data){
-        // crea estado base
         startedAt = new Date().toISOString();
         matchId = (crypto?.randomUUID?.() || ("m_" + Math.random().toString(16).slice(2)));
 
@@ -1299,7 +1311,6 @@
       if(gameOver){
         setStatus("Estado: partida terminada 🤡");
         showGameOverModal();
-        // intenta escribir historial (por si el otro ya lo escribió, no pasa nada)
         await writeMatchHistoryOnce();
         await loadLeaderboard();
       }
@@ -1499,7 +1510,6 @@
       pieces = [null, null, null];
       ensurePlayablePieces();
 
-      // new match
       matchId = (crypto?.randomUUID?.() || ("m_" + Math.random().toString(16).slice(2)));
       startedAt = new Date().toISOString();
       endedAt = null;
