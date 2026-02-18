@@ -1,0 +1,1268 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>bblastcute</title>
+
+  <style>
+    :root{
+      --bg-day: url("assets/bg_day.png");
+      --bg-night: url("assets/bg_night.png");
+
+      --panel: rgba(255,255,255,.75);
+      --panel2: rgba(255,255,255,.65);
+      --stroke: rgba(255,255,255,.55);
+      --shadow: 0 18px 50px rgba(0,0,0,.12);
+      --shadow-strong: 0 20px 60px rgba(0,0,0,.18);
+
+      --pink: #ff6aa8;
+      --purple: #b9a5ff;
+      --ink: #2b2b2b;
+
+      --grid-line: rgba(160, 120, 255, .35);
+      --grid-line-night: rgba(220, 200, 255, .24);
+
+      --btn: #ffe37a;
+      --btnText: #2b2b2b;
+      --pill: rgba(255,255,255,.7);
+      --pillNight: rgba(20, 8, 40, .55);
+
+      --card-radius: 22px;
+      --inner-radius: 18px;
+      --grid-radius: 16px;
+    }
+
+    *{ box-sizing: border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family: ui-rounded, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 25% 20%, rgba(255,255,255,.65), transparent 45%),
+        radial-gradient(circle at 70% 60%, rgba(255,255,255,.55), transparent 55%),
+        var(--bg-day);
+      background-size: cover;
+      background-attachment: fixed;
+      overflow-x:hidden;
+    }
+
+    body.night{
+      color: rgba(255,255,255,.88);
+      background:
+        radial-gradient(circle at 25% 20%, rgba(255,255,255,.12), transparent 45%),
+        radial-gradient(circle at 70% 60%, rgba(255,255,255,.10), transparent 55%),
+        var(--bg-night);
+      background-size: cover;
+      background-attachment: fixed;
+    }
+
+    .wrap{
+      max-width: 1120px;
+      margin: 22px auto 60px;
+      padding: 0 16px;
+      position: relative;
+    }
+
+    .title{
+      text-align:center;
+      font-weight: 900;
+      letter-spacing:.5px;
+      font-size: 46px;
+      margin: 8px 0 18px;
+      color: rgba(255, 120, 180, .95);
+      text-shadow: 0 10px 28px rgba(0,0,0,.12);
+      user-select:none;
+    }
+    body.night .title{
+      color: rgba(255, 160, 220, .95);
+      text-shadow: 0 14px 34px rgba(0,0,0,.45);
+    }
+
+    .topPanel{
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      border-radius: var(--card-radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      display:flex;
+      gap: 12px;
+      align-items:center;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      backdrop-filter: blur(10px);
+    }
+    body.night .topPanel{
+      background: rgba(10, 4, 18, .42);
+      border-color: rgba(255,255,255,.14);
+      box-shadow: 0 24px 70px rgba(0,0,0,.42);
+    }
+
+    .leftPills{
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      flex-wrap: wrap;
+    }
+    .pill{
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: var(--pill);
+      border: 1px solid rgba(255,255,255,.55);
+      box-shadow: 0 10px 28px rgba(0,0,0,.08);
+      user-select:none;
+      font-weight: 800;
+    }
+    body.night .pill{
+      background: var(--pillNight);
+      border-color: rgba(255,255,255,.16);
+      box-shadow: 0 10px 34px rgba(0,0,0,.35);
+    }
+
+    .controls{
+      display:flex;
+      gap: 10px;
+      align-items:center;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+      flex:1;
+      min-width: 280px;
+    }
+
+    input{
+      height: 44px;
+      padding: 0 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,.55);
+      background: rgba(255,255,255,.75);
+      outline: none;
+      font-weight: 700;
+      min-width: 190px;
+    }
+    body.night input{
+      background: rgba(0,0,0,.30);
+      border-color: rgba(255,255,255,.16);
+      color: rgba(255,255,255,.92);
+    }
+    input::placeholder{ color: rgba(0,0,0,.35); }
+    body.night input::placeholder{ color: rgba(255,255,255,.45); }
+
+    button{
+      height: 44px;
+      padding: 0 16px;
+      border-radius: 14px;
+      border: 0;
+      font-weight: 900;
+      cursor:pointer;
+      background: var(--btn);
+      color: var(--btnText);
+      box-shadow: 0 14px 32px rgba(0,0,0,.12);
+      transition: transform .08s ease, filter .08s ease;
+    }
+    button:active{ transform: scale(.98); filter: brightness(.98); }
+    button.secondary{
+      background: rgba(255,255,255,.7);
+      border: 1px solid rgba(255,255,255,.55);
+    }
+    body.night button.secondary{
+      background: rgba(0,0,0,.28);
+      color: rgba(255,255,255,.88);
+      border: 1px solid rgba(255,255,255,.14);
+    }
+
+    .status{
+      text-align:center;
+      margin: 12px 0 14px;
+      font-weight: 800;
+      opacity: .9;
+      user-select:none;
+      text-shadow: 0 10px 28px rgba(0,0,0,.10);
+    }
+    body.night .status{ text-shadow: 0 14px 34px rgba(0,0,0,.45); }
+
+    .layout{
+      display:grid;
+      grid-template-columns: 1fr 300px;
+      gap: 14px;
+      align-items:start;
+    }
+    @media (max-width: 980px){
+      .layout{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: var(--panel2);
+      border: 1px solid var(--stroke);
+      border-radius: var(--card-radius);
+      box-shadow: var(--shadow-strong);
+      padding: 14px;
+      backdrop-filter: blur(10px);
+      position: relative;
+    }
+    body.night .card{
+      background: rgba(10, 4, 18, .42);
+      border-color: rgba(255,255,255,.14);
+      box-shadow: 0 24px 70px rgba(0,0,0,.42);
+    }
+
+    .cardHeader{
+      display:flex;
+      align-items:center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .cardHeader .label{
+      font-weight: 950;
+      opacity:.9;
+      display:flex;
+      gap: 10px;
+      align-items:center;
+    }
+    .scorebar{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.65);
+      border: 1px solid rgba(255,255,255,.55);
+      font-weight: 950;
+      user-select:none;
+    }
+    body.night .scorebar{
+      background: rgba(0,0,0,.28);
+      border-color: rgba(255,255,255,.14);
+    }
+    .scorebar span{ opacity:.95; }
+    .scoreChip{
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.68);
+      border: 1px solid rgba(255,255,255,.55);
+      display:flex;
+      align-items:center;
+      gap: 8px;
+      font-weight: 950;
+    }
+    body.night .scoreChip{
+      background: rgba(0,0,0,.24);
+      border-color: rgba(255,255,255,.14);
+    }
+
+    .gridWrap{
+      width: 100%;
+      aspect-ratio: 1/1;
+      border-radius: var(--inner-radius);
+      padding: 12px;
+      background: rgba(255,255,255,.55);
+      border: 1px solid rgba(255,255,255,.65);
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.02);
+      position: relative;
+      overflow:hidden;
+    }
+    body.night .gridWrap{
+      background: rgba(0,0,0,.18);
+      border-color: rgba(255,255,255,.14);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.06);
+    }
+
+    .grid{
+      width: 100%;
+      height: 100%;
+      border-radius: var(--grid-radius);
+      position: relative;
+      overflow:hidden;
+      background:
+        linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+      background-size: 10% 10%;
+      background-position: 0 0;
+      border: 2px solid rgba(160, 120, 255, .28);
+    }
+    body.night .grid{
+      background:
+        linear-gradient(to right, var(--grid-line-night) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-line-night) 1px, transparent 1px);
+      background-size: 10% 10%;
+      border: 2px solid rgba(233, 215, 255, .18);
+    }
+
+    /* blocks are always square */
+    .block{
+      position:absolute;
+      width: 10%;
+      height: 10%;
+      aspect-ratio: 1/1;
+      border-radius: 6px;
+      transform: translateZ(0);
+    }
+    .block.preview{
+      pointer-events:none;
+      border-radius: 6px;
+      mix-blend-mode: normal;
+    }
+
+    .pieces{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .pieceCard{
+      height: 90px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.55);
+      border: 1px solid rgba(255,255,255,.60);
+      position: relative;
+      overflow:hidden;
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow: 0 12px 30px rgba(0,0,0,.08);
+      transition: transform .08s ease, outline .08s ease, box-shadow .08s ease, opacity .08s ease;
+      touch-action: none;
+    }
+    body.night .pieceCard{
+      background: rgba(0,0,0,.18);
+      border-color: rgba(255,255,255,.14);
+      box-shadow: 0 16px 40px rgba(0,0,0,.35);
+    }
+
+    .pieceCard.selected{
+      outline: 4px solid rgba(255, 106, 168, .55);
+      box-shadow: 0 18px 35px rgba(255, 106, 168, .18);
+      transform: translateY(-1px);
+    }
+    body.night .pieceCard.selected{
+      outline: 4px solid rgba(255, 106, 168, .60);
+      box-shadow: 0 18px 40px rgba(255, 106, 168, .22);
+    }
+
+    /* empty slot (cuando ya usaste esa pieza) */
+    .pieceCard.empty{
+      cursor: default;
+      opacity: .55;
+    }
+    .emptyMark{
+      font-weight: 950;
+      opacity: .7;
+      user-select:none;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: 1px dashed rgba(255,255,255,.65);
+      background: rgba(255,255,255,.35);
+    }
+    body.night .emptyMark{
+      border-color: rgba(255,255,255,.25);
+      background: rgba(0,0,0,.18);
+    }
+
+    .miniNote{
+      margin-top: 8px;
+      font-size: 12px;
+      font-weight: 850;
+      opacity:.85;
+      text-align:center;
+      user-select:none;
+    }
+
+    .sticker{
+      position: fixed;
+      pointer-events: none;
+      user-select:none;
+      opacity: .95;
+      filter: drop-shadow(0 18px 25px rgba(0,0,0,.18));
+      z-index: 1;
+    }
+    .sticker.cinna{
+      left: 18px;
+      bottom: 18px;
+      width: 140px;
+      display:block;
+    }
+    .sticker.kuromi{
+      right: 18px;
+      bottom: 18px;
+      width: 140px;
+      display:none;
+    }
+    body.night .sticker.cinna{ display:none; }
+    body.night .sticker.kuromi{ display:block; }
+
+    .toast{
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 18px;
+      background: rgba(0,0,0,.72);
+      color: white;
+      padding: 10px 14px;
+      border-radius: 999px;
+      font-weight: 900;
+      box-shadow: 0 18px 40px rgba(0,0,0,.25);
+      opacity: 0;
+      pointer-events:none;
+      transition: opacity .2s ease, transform .2s ease;
+      z-index: 50;
+    }
+    .toast.show{
+      opacity: 1;
+      transform: translateX(-50%) translateY(-6px);
+    }
+  </style>
+</head>
+
+<body>
+  <img class="sticker cinna" src="assets/sticker_cinnamoroll.png" alt="cinnamoroll" />
+  <img class="sticker kuromi" src="assets/sticker_kuromi.png" alt="kuromi" />
+
+  <div class="wrap">
+    <div class="title">bblastcute</div>
+
+    <div class="topPanel">
+      <div class="leftPills">
+        <div class="pill" id="pillScore">EMY 🎀 <span id="emyScoreTop">0</span> vs <span id="diegoScoreTop">0</span> DIEGO 🍭</div>
+        <div class="pill" id="pillRoom">ROOM: <span id="roomCodeTop">—</span></div>
+        <button class="secondary" id="btnCopyTop">📋 Copiar</button>
+        <button class="secondary" id="btnTheme">🖤 Kuromi</button>
+      </div>
+
+      <div class="controls">
+        <input id="nameInput" placeholder="Tu nombre (EMY o DIEGO)" />
+        <button id="btnCreate">Crear sala</button>
+        <input id="codeInput" placeholder="Código sala (ej BB-AB12)" />
+        <button id="btnJoin">Unirme</button>
+      </div>
+    </div>
+
+    <div class="status" id="status">Estado: lista. crea sala o únete 💗</div>
+
+    <div class="layout">
+      <div class="card">
+        <div class="cardHeader">
+          <div class="label" id="myLabel">Tu tablero 🎀</div>
+
+          <div class="scorebar">
+            <span id="emyNameBar">EMY 🎀</span>
+            <span id="emyScoreBar">0</span>
+            <span>vs</span>
+            <span id="diegoNameBar">DIEGO 🍭</span>
+            <span id="diegoScoreBar">0</span>
+          </div>
+
+          <div style="display:flex;gap:10px;align-items:center;">
+            <div class="scoreChip">+<span id="plusHint">0</span></div>
+            <button class="secondary" id="btnDemo">Click = +100 (demo)</button>
+          </div>
+        </div>
+
+        <div class="gridWrap">
+          <div id="myGrid" class="grid"></div>
+        </div>
+
+        <div class="pieces" id="pieces"></div>
+
+        <div class="miniNote">Toca una pieza y luego toca el tablero ✨ (no rotas manualmente, pero pueden salir en distintas direcciones)</div>
+      </div>
+
+      <div class="card">
+        <div class="cardHeader">
+          <div class="label" id="rivalLabel">Rival 🍭</div>
+          <button class="secondary" id="btnMini">Live mini</button>
+        </div>
+
+        <div class="gridWrap" style="padding:10px;">
+          <div id="rivalGrid" class="grid"></div>
+        </div>
+
+        <div class="miniNote">Se actualiza cuando el rival juega 💜</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">Copiado ✨</div>
+
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+    // =========================
+    // 1) SUPABASE CONFIG
+    // =========================
+    const SUPABASE_URL = "https://zemahkgewkhwasfelubd.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_zKobvn65UtJFZstirEWTOQ_NmorSF-3";
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: false },
+      realtime: { params: { eventsPerSecond: 10 } }
+    });
+
+    // =========================
+    // 2) UI refs
+    // =========================
+    const elStatus = document.getElementById("status");
+    const elNameInput = document.getElementById("nameInput");
+    const elCodeInput = document.getElementById("codeInput");
+    const elBtnCreate = document.getElementById("btnCreate");
+    const elBtnJoin = document.getElementById("btnJoin");
+    const elBtnCopyTop = document.getElementById("btnCopyTop");
+    const elBtnTheme = document.getElementById("btnTheme");
+
+    const elRoomCodeTop = document.getElementById("roomCodeTop");
+    const elEmyTop = document.getElementById("emyScoreTop");
+    const elDiegoTop = document.getElementById("diegoScoreTop");
+
+    const elEmyBar = document.getElementById("emyScoreBar");
+    const elDiegoBar = document.getElementById("diegoScoreBar");
+    const elPlusHint = document.getElementById("plusHint");
+
+    const elMyLabel = document.getElementById("myLabel");
+    const elRivalLabel = document.getElementById("rivalLabel");
+
+    const elMyGrid = document.getElementById("myGrid");
+    const elRivalGrid = document.getElementById("rivalGrid");
+    const elPieces = document.getElementById("pieces");
+
+    const elBtnDemo = document.getElementById("btnDemo");
+    const elToast = document.getElementById("toast");
+
+    // =========================
+    // 3) Game state
+    // =========================
+    const SIZE = 10;
+
+    function emptyGrid(){
+      return Array.from({length: SIZE}, () => Array.from({length: SIZE}, () => 0));
+    }
+
+    let roomId = null;
+    let roomCode = null;
+
+    let player = null; // 'emy' | 'diego'
+    let myName = null;
+
+    let emyScore = 0;
+    let diegoScore = 0;
+    let emyGrid = emptyGrid();
+    let diegoGrid = emptyGrid();
+
+    // BlockBlast feel: las 3 piezas se quedan hasta usarlas TODAS
+    let pieces = [null, null, null];
+    let selectedIndex = null;
+
+    let channel = null;
+    let liveMini = true;
+    let saveTimer = null;
+    let lastSaved = 0;
+
+    // =========================
+    // 4) Helpers UI
+    // =========================
+    function toast(msg="Copiado ✨"){
+      elToast.textContent = msg;
+      elToast.classList.add("show");
+      setTimeout(() => elToast.classList.remove("show"), 900);
+    }
+
+    function setStatus(msg){ elStatus.textContent = msg; }
+
+    function normalizeName(s){
+      const v = (s||"").trim().toLowerCase();
+      if(v === "emy") return "emy";
+      if(v === "diego") return "diego";
+      return null;
+    }
+
+    function updateHeader(){
+      elRoomCodeTop.textContent = roomCode || "—";
+      elEmyTop.textContent = String(emyScore);
+      elDiegoTop.textContent = String(diegoScore);
+      elEmyBar.textContent = String(emyScore);
+      elDiegoBar.textContent = String(diegoScore);
+
+      elMyLabel.textContent = player === "emy" ? "Tu tablero 🎀 (EMY)" : player === "diego" ? "Tu tablero 🍭 (DIEGO)" : "Tu tablero 🎀";
+      elRivalLabel.textContent = player === "emy" ? "Rival 🍭 (DIEGO)" : player === "diego" ? "Rival 🎀 (EMY)" : "Rival 🍭";
+    }
+
+    function gridToJson(g){ return g.map(row => row.join("")); }
+
+    function jsonToGrid(j){
+      if(!Array.isArray(j)) return emptyGrid();
+      const g = emptyGrid();
+      for(let y=0;y<Math.min(SIZE, j.length);y++){
+        const row = String(j[y] || "");
+        for(let x=0;x<Math.min(SIZE, row.length);x++){
+          g[y][x] = row[x] === "1" ? 1 : 0;
+        }
+      }
+      return g;
+    }
+
+    // =========================
+    // 5) Rendering blocks + preview
+    // =========================
+    function styleBlock(b, isNight){
+      // “modo claro look” pero visible en noche
+      if(isNight){
+        b.style.outline = "2px solid rgba(255,255,255,.65)";
+        b.style.boxShadow = "0 14px 26px rgba(0,0,0,.60), 0 0 18px rgba(255,106,168,.30)";
+      } else {
+        b.style.outline = "1px solid rgba(255,255,255,.55)";
+        b.style.boxShadow = "0 10px 18px rgba(0,0,0,.12)";
+      }
+    }
+
+    function renderBlocks(container, g, color){
+      container.querySelectorAll(".block").forEach(b => b.remove());
+      const isNight = document.body.classList.contains("night");
+
+      for(let y=0;y<SIZE;y++){
+        for(let x=0;x<SIZE;x++){
+          if(g[y][x]){
+            const b = document.createElement("div");
+            b.className = "block";
+            b.style.left = (x*10) + "%";
+            b.style.top  = (y*10) + "%";
+            b.style.background = color;
+            styleBlock(b, isNight);
+            container.appendChild(b);
+          }
+        }
+      }
+    }
+
+    function renderPreview(container, pts, ox, oy, ok=true){
+      container.querySelectorAll(".preview").forEach(b => b.remove());
+      if(!pts) return;
+
+      const isNight = document.body.classList.contains("night");
+
+      for(const pt of pts){
+        const x = ox + pt.x;
+        const y = oy + pt.y;
+        if(x<0 || y<0 || x>=SIZE || y>=SIZE) continue;
+
+        const b = document.createElement("div");
+        b.className = "block preview";
+        b.style.left = (x*10) + "%";
+        b.style.top  = (y*10) + "%";
+
+        // Preview muy visible
+        if(ok){
+          b.style.background = isNight ? "rgba(255,106,168,.28)" : "rgba(255,106,168,.25)";
+          b.style.outline = isNight ? "2px dashed rgba(255,255,255,.75)" : "2px dashed rgba(255,255,255,.65)";
+        } else {
+          b.style.background = isNight ? "rgba(255,60,120,.18)" : "rgba(200,50,80,.18)";
+          b.style.outline = "2px dashed rgba(255,120,180,.65)";
+        }
+
+        b.style.boxShadow = "none";
+        container.appendChild(b);
+      }
+    }
+
+    function renderAll(){
+      updateHeader();
+
+      // mismo look de piezas en día y noche (tu pedido)
+      const myColor = "#ff6aa8";
+      const rivalColor = "#b9a5ff";
+
+      if(player === "emy"){
+        renderBlocks(elMyGrid, emyGrid, myColor);
+        if(liveMini) renderBlocks(elRivalGrid, diegoGrid, rivalColor);
+      } else if(player === "diego"){
+        renderBlocks(elMyGrid, diegoGrid, myColor);
+        if(liveMini) renderBlocks(elRivalGrid, emyGrid, rivalColor);
+      } else {
+        renderBlocks(elMyGrid, emptyGrid(), myColor);
+        renderBlocks(elRivalGrid, emptyGrid(), rivalColor);
+      }
+
+      renderPieces();
+    }
+
+    // =========================
+    // 6) Pieces (con orientaciones aleatorias)
+    // =========================
+    const SHAPES = [
+      [{x:0,y:0}],
+      [{x:0,y:0},{x:1,y:0}],
+      [{x:0,y:0},{x:0,y:1}],
+      [{x:0,y:0},{x:1,y:0},{x:2,y:0}],
+      [{x:0,y:0},{x:0,y:1},{x:0,y:2}],
+      [{x:0,y:0},{x:1,y:0},{x:0,y:1},{x:1,y:1}],
+      [{x:0,y:0},{x:1,y:0},{x:2,y:0},{x:1,y:1}],
+      [{x:0,y:0},{x:0,y:1},{x:1,y:1},{x:2,y:1}],
+      [{x:2,y:0},{x:0,y:1},{x:1,y:1},{x:2,y:1}],
+      [{x:0,y:0},{x:1,y:0},{x:1,y:1},{x:2,y:1}],
+      [{x:1,y:0},{x:2,y:0},{x:0,y:1},{x:1,y:1}],
+      [{x:0,y:0},{x:1,y:0},{x:2,y:0},{x:3,y:0}],
+      [{x:0,y:0},{x:0,y:1},{x:0,y:2},{x:0,y:3}],
+      [{x:0,y:0},{x:1,y:0},{x:2,y:0},{x:0,y:1},{x:0,y:2}],
+      [{x:0,y:0},{x:0,y:1},{x:1,y:1},{x:2,y:1},{x:2,y:0}],
+    ];
+
+    function normalizePts(pts){
+      let minX = Infinity, minY = Infinity;
+      let maxX = -Infinity, maxY = -Infinity;
+
+      for(const p of pts){
+        minX = Math.min(minX, p.x);
+        minY = Math.min(minY, p.y);
+        maxX = Math.max(maxX, p.x);
+        maxY = Math.max(maxY, p.y);
+      }
+      const out = pts.map(p => ({ x: p.x - minX, y: p.y - minY }));
+
+      // recompute bounds after normalize
+      let w = 0, h = 0;
+      for(const p of out){
+        w = Math.max(w, p.x + 1);
+        h = Math.max(h, p.y + 1);
+      }
+      return { pts: out, w, h };
+    }
+
+    function rotate90(pts){
+      // (x,y) -> (y, -x)
+      return pts.map(p => ({ x: p.y, y: -p.x }));
+    }
+
+    function mirrorX(pts){
+      // (x,y) -> (-x, y)
+      return pts.map(p => ({ x: -p.x, y: p.y }));
+    }
+
+    function randomOrientedPieceFrom(shapePts){
+      let pts = JSON.parse(JSON.stringify(shapePts));
+
+      // 50% mirror (para L/J, S/Z, etc)
+      if(Math.random() < 0.5) pts = mirrorX(pts);
+
+      // rotate 0/90/180/270
+      const r = Math.floor(Math.random() * 4);
+      for(let i=0;i<r;i++) pts = rotate90(pts);
+
+      return normalizePts(pts);
+    }
+
+    function randomPiece(){
+      const base = SHAPES[Math.floor(Math.random()*SHAPES.length)];
+      return randomOrientedPieceFrom(base);
+    }
+
+    function canPlace(grid, pts, ox, oy){
+      for(const p of pts){
+        const x = ox + p.x, y = oy + p.y;
+        if(x<0||y<0||x>=SIZE||y>=SIZE) return false;
+        if(grid[y][x]) return false;
+      }
+      return true;
+    }
+
+    function anyPlacementExists(grid, piece){
+      for(let y=0;y<SIZE;y++){
+        for(let x=0;x<SIZE;x++){
+          if(canPlace(grid, piece.pts, x, y)) return true;
+        }
+      }
+      return false;
+    }
+
+    function myActiveGrid(){
+      return player === "emy" ? emyGrid : diegoGrid;
+    }
+
+    function ensurePlayablePieces(){
+      // Re-roll sets ENTEROS hasta que:
+      //  - al menos 1 de las 3 quepa (BlockBlast feeling)
+      //  - y SOLO se llama cuando el set está vacío (o al inicio)
+      const g = myActiveGrid();
+
+      for(let tries=0; tries<80; tries++){
+        const cand = [randomPiece(), randomPiece(), randomPiece()];
+        if(cand.some(p => anyPlacementExists(g, p))){
+          pieces = cand;
+          selectedIndex = null;
+          return;
+        }
+      }
+
+      // fallback
+      pieces = [randomPiece(), randomPiece(), randomPiece()];
+      selectedIndex = null;
+    }
+
+    function renderPieces(){
+      elPieces.innerHTML = "";
+
+      // si está vacío (inicio) generamos; si no, NO TOCAMOS el set aunque haya nulls
+      if(!Array.isArray(pieces) || pieces.length !== 3 || pieces.every(p => p === null)){
+        ensurePlayablePieces();
+      }
+
+      for(let i=0;i<3;i++){
+        const piece = pieces[i];
+
+        const card = document.createElement("div");
+        const isEmpty = !piece;
+        card.className = "pieceCard" +
+          (selectedIndex===i ? " selected" : "") +
+          (isEmpty ? " empty" : "");
+        card.dataset.idx = String(i);
+
+        const mini = document.createElement("div");
+        mini.style.width = "72px";
+        mini.style.height = "72px";
+        mini.style.position = "relative";
+
+        if(piece){
+          // centrar en un grid 6x6 para que no se vea estirada
+          const gridSize = 6;
+          const cell = 72 / gridSize;
+
+          const offsetX = ((gridSize - piece.w) / 2) * cell;
+          const offsetY = ((gridSize - piece.h) / 2) * cell;
+
+          const isNight = document.body.classList.contains("night");
+          const col = "#ff6aa8";
+
+          for(const p of piece.pts){
+            const b = document.createElement("div");
+            b.style.position="absolute";
+            b.style.left = (offsetX + p.x*cell) + "px";
+            b.style.top  = (offsetY + p.y*cell) + "px";
+            b.style.width = cell + "px";
+            b.style.height = cell + "px";
+            b.style.aspectRatio = "1/1";
+            b.style.borderRadius = "6px";
+            b.style.background = col;
+
+            if(isNight){
+              b.style.outline = "2px solid rgba(255,255,255,.65)";
+              b.style.boxShadow = "0 12px 22px rgba(0,0,0,.60), 0 0 14px rgba(255,106,168,.28)";
+            } else {
+              b.style.outline = "1px solid rgba(255,255,255,.55)";
+              b.style.boxShadow = "0 10px 16px rgba(0,0,0,.10)";
+            }
+            mini.appendChild(b);
+          }
+
+          card.addEventListener("pointerdown", (e)=>{
+            e.preventDefault();
+            selectedIndex = (selectedIndex===i ? null : i);
+            renderAll();
+          });
+        } else {
+          // slot vacío (ya la usaste) -> no seleccionable
+          const mark = document.createElement("div");
+          mark.className = "emptyMark";
+          mark.textContent = "usada ✨";
+          mini.appendChild(mark);
+
+          // si estaba seleccionada y se gastó, limpiamos
+          if(selectedIndex === i) selectedIndex = null;
+        }
+
+        card.appendChild(mini);
+        elPieces.appendChild(card);
+      }
+    }
+
+    // =========================
+    // 7) Placement logic + scoring
+    // =========================
+    function doPlace(grid, pts, ox, oy){
+      for(const p of pts){
+        grid[oy+p.y][ox+p.x] = 1;
+      }
+    }
+
+    function clearLines(grid){
+      let cleared = 0;
+
+      for(let y=0;y<SIZE;y++){
+        let full = true;
+        for(let x=0;x<SIZE;x++){
+          if(!grid[y][x]){ full=false; break; }
+        }
+        if(full){
+          cleared++;
+          for(let x=0;x<SIZE;x++) grid[y][x]=0;
+        }
+      }
+
+      for(let x=0;x<SIZE;x++){
+        let full = true;
+        for(let y=0;y<SIZE;y++){
+          if(!grid[y][x]){ full=false; break; }
+        }
+        if(full){
+          cleared++;
+          for(let y=0;y<SIZE;y++) grid[y][x]=0;
+        }
+      }
+
+      return cleared;
+    }
+
+    function addScore(who, delta){
+      if(who === "emy") emyScore += delta;
+      else diegoScore += delta;
+      elPlusHint.textContent = String(delta);
+      setTimeout(()=> elPlusHint.textContent = "0", 700);
+    }
+
+    function placePieceAtCell(cellX, cellY){
+      if(selectedIndex === null) return false;
+      const piece = pieces[selectedIndex];
+      if(!piece) return false;
+
+      const g = myActiveGrid();
+      const ok = canPlace(g, piece.pts, cellX, cellY);
+      if(!ok) return false;
+
+      doPlace(g, piece.pts, cellX, cellY);
+
+      const lines = clearLines(g);
+      const pts = piece.pts.length + (lines * 10);
+      addScore(player, pts);
+
+      // consume piece: queda slot vacío hasta que uses las 3
+      pieces[selectedIndex] = null;
+      selectedIndex = null;
+
+      // SOLO cuando usas las 3, salen nuevas (BlockBlast)
+      if(pieces.every(p => p === null)){
+        ensurePlayablePieces();
+      }
+
+      queueSave();
+      renderAll();
+      return true;
+    }
+
+    function cellFromEvent(ev, gridEl){
+      const rect = gridEl.getBoundingClientRect();
+      const px = ev.clientX - rect.left;
+      const py = ev.clientY - rect.top;
+      const cellX = Math.floor(px / (rect.width / SIZE));
+      const cellY = Math.floor(py / (rect.height / SIZE));
+      return {cellX, cellY};
+    }
+
+    function attachBoard(){
+      elMyGrid.addEventListener("pointermove", (ev) => {
+        if(selectedIndex === null) {
+          elMyGrid.querySelectorAll(".preview").forEach(b => b.remove());
+          return;
+        }
+        const piece = pieces[selectedIndex];
+        if(!piece || !piece.pts) return;
+
+        const {cellX, cellY} = cellFromEvent(ev, elMyGrid);
+        const ok = canPlace(myActiveGrid(), piece.pts, cellX, cellY);
+        renderPreview(elMyGrid, piece.pts, cellX, cellY, ok);
+      });
+
+      elMyGrid.addEventListener("pointerleave", () => {
+        elMyGrid.querySelectorAll(".preview").forEach(b => b.remove());
+      });
+
+      elMyGrid.addEventListener("pointerdown", async (ev) => {
+        if(!player || !roomId) return;
+        if(selectedIndex === null) return;
+
+        const {cellX, cellY} = cellFromEvent(ev, elMyGrid);
+        const ok = placePieceAtCell(cellX, cellY);
+        if(!ok){
+          elMyGrid.animate(
+            [{transform:"translateX(0)"},{transform:"translateX(-6px)"},{transform:"translateX(6px)"},{transform:"translateX(0)"}],
+            {duration:160}
+          );
+        }
+        elMyGrid.querySelectorAll(".preview").forEach(b => b.remove());
+      });
+    }
+    attachBoard();
+
+    // =========================
+    // 8) Saving / Loading
+    // =========================
+    async function loadRoomState(){
+      if(!roomId) return;
+
+      const { data, error } = await supabase
+        .from("room_state")
+        .select("*")
+        .eq("room_id", roomId)
+        .maybeSingle();
+
+      if(error){
+        console.error(error);
+        setStatus("Error cargando estado (F12)");
+        return;
+      }
+
+      if(!data){
+        await supabase.from("room_state").insert({
+          room_id: roomId,
+          emy_score: 0,
+          diego_score: 0,
+          emy_grid: gridToJson(emyGrid),
+          diego_grid: gridToJson(diegoGrid),
+          updated_at: new Date().toISOString()
+        });
+        return;
+      }
+
+      emyScore = data.emy_score ?? 0;
+      diegoScore = data.diego_score ?? 0;
+      emyGrid = jsonToGrid(data.emy_grid);
+      diegoGrid = jsonToGrid(data.diego_grid);
+
+      renderAll();
+    }
+
+    function queueSave(){
+      if(!roomId) return;
+
+      if(saveTimer) clearTimeout(saveTimer);
+      saveTimer = setTimeout(async ()=>{
+        saveTimer = null;
+        const now = Date.now();
+        if(now - lastSaved < 250) return;
+        lastSaved = now;
+
+        const payload = {
+          room_id: roomId,
+          emy_score: emyScore,
+          diego_score: diegoScore,
+          emy_grid: gridToJson(emyGrid),
+          diego_grid: gridToJson(diegoGrid),
+          updated_at: new Date().toISOString()
+        };
+
+        const { error } = await supabase
+          .from("room_state")
+          .upsert(payload, { onConflict: "room_id" });
+
+        if(error){
+          console.error(error);
+          setStatus("Error guardando estado (F12)");
+        } else {
+          setStatus("Estado: jugando 💗");
+        }
+      }, 120);
+    }
+
+    // =========================
+    // 9) Realtime sync
+    // =========================
+    function stopRealtime(){
+      if(channel){
+        supabase.removeChannel(channel);
+        channel = null;
+      }
+    }
+
+    function startRealtime(){
+      stopRealtime();
+      if(!roomId) return;
+
+      channel = supabase.channel("room_state_" + roomId);
+
+      channel
+        .on("postgres_changes", {
+          event: "*",
+          schema: "public",
+          table: "room_state",
+          filter: "room_id=eq." + roomId
+        }, (payload) => {
+          const row = payload.new;
+          if(!row) return;
+
+          emyScore = row.emy_score ?? emyScore;
+          diegoScore = row.diego_score ?? diegoScore;
+          emyGrid = jsonToGrid(row.emy_grid);
+          diegoGrid = jsonToGrid(row.diego_grid);
+
+          renderAll();
+        })
+        .subscribe((status) => {
+          console.log("realtime:", status);
+        });
+    }
+
+    setInterval(async ()=>{
+      if(!roomId) return;
+      if(channel) return;
+      await loadRoomState();
+    }, 2000);
+
+    // =========================
+    // 10) Rooms: create / join
+    // =========================
+    function makeCode(){
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let s = "BB-";
+      for(let i=0;i<4;i++) s += chars[Math.floor(Math.random()*chars.length)];
+      return s;
+    }
+
+    async function createRoom(){
+      const who = normalizeName(elNameInput.value);
+      if(!who){
+        setStatus("Pon tu nombre como EMY o DIEGO 😭");
+        return;
+      }
+
+      player = who;
+      myName = who;
+
+      roomCode = makeCode();
+
+      const { data, error } = await supabase
+        .from("rooms")
+        .insert({ code: roomCode })
+        .select("*")
+        .single();
+
+      if(error){
+        console.error(error);
+        setStatus("Error creando sala (F12)");
+        return;
+      }
+
+      roomId = data.id;
+
+      emyScore = 0; diegoScore = 0;
+      emyGrid = emptyGrid();
+      diegoGrid = emptyGrid();
+
+      pieces = [null, null, null];
+      ensurePlayablePieces();
+
+      const { error: err2 } = await supabase.from("room_state").upsert({
+        room_id: roomId,
+        emy_score: 0,
+        diego_score: 0,
+        emy_grid: gridToJson(emyGrid),
+        diego_grid: gridToJson(diegoGrid),
+        updated_at: new Date().toISOString()
+      }, { onConflict: "room_id" });
+
+      if(err2){
+        console.error(err2);
+        setStatus("Error creando estado (F12)");
+        return;
+      }
+
+      setStatus("Estado: sala creada. comparte el código 💗");
+      updateHeader();
+      renderAll();
+      startRealtime();
+    }
+
+    async function joinRoom(){
+      const who = normalizeName(elNameInput.value);
+      if(!who){
+        setStatus("Pon tu nombre como EMY o DIEGO 😭");
+        return;
+      }
+      const code = (elCodeInput.value || "").trim().toUpperCase();
+      if(!code){
+        setStatus("Pon el código de sala bb 🥺");
+        return;
+      }
+
+      player = who;
+      myName = who;
+      roomCode = code;
+
+      const { data, error } = await supabase
+        .from("rooms")
+        .select("*")
+        .eq("code", roomCode)
+        .maybeSingle();
+
+      if(error){
+        console.error(error);
+        setStatus("Error uniéndote (F12)");
+        return;
+      }
+      if(!data){
+        setStatus("No existe esa sala 😭 revisa el código");
+        return;
+      }
+
+      roomId = data.id;
+
+      await loadRoomState();
+
+      pieces = [null, null, null];
+      ensurePlayablePieces();
+      selectedIndex = null;
+      renderAll();
+
+      setStatus("Estado: unida a sala. a jugar 😈");
+      startRealtime();
+    }
+
+    // =========================
+    // 11) Buttons
+    // =========================
+    elBtnCreate.addEventListener("click", createRoom);
+    elBtnJoin.addEventListener("click", joinRoom);
+
+    function copyRoom(){
+      if(!roomCode){ toast("No hay código aún 🥺"); return; }
+      navigator.clipboard.writeText(roomCode).then(()=> toast("Código copiado 💗"));
+    }
+    elBtnCopyTop.addEventListener("click", copyRoom);
+    document.getElementById("pillRoom").addEventListener("click", copyRoom);
+
+    elBtnTheme.addEventListener("click", ()=>{
+      document.body.classList.toggle("night");
+      renderAll();
+      toast(document.body.classList.contains("night") ? "Modo Kuromi 🖤" : "Modo pastel ☁️");
+    });
+
+    document.getElementById("btnMini").addEventListener("click", ()=>{
+      liveMini = !liveMini;
+      toast(liveMini ? "Live mini ON 💜" : "Live mini OFF 💤");
+      renderAll();
+    });
+
+    elBtnDemo.addEventListener("click", ()=>{
+      if(!player || !roomId) return;
+      addScore(player, 100);
+      queueSave();
+      renderAll();
+    });
+
+    // =========================
+    // 12) Init
+    // =========================
+    elNameInput.value = "EMY";
+    pieces = [null, null, null];
+    ensurePlayablePieces();
+    renderAll();
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+

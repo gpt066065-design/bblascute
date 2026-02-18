@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>bblastcute 🎀</title>
+
+  <!-- Fredoka -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Supabase JS (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root{
+      --pink-emy:#ffcce5;
+      --purple-diego:#e5ccff;
+      --pompom-yellow:#fff4a3;
+
+      --shadow-pink: rgba(255, 133, 178, 0.25);
+      --shadow-purple: rgba(181, 133, 255, 0.22);
+    }
+    *{ box-sizing:border-box; }
+
+    body{
+      font-family:'Fredoka', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background:#fff0f6;
+      margin:0;
+      overflow-x:hidden;
+      color:#333;
+    }
+
+    .header{
+      padding:18px 16px 6px;
+      text-align:center;
+    }
+    .header h1{
+      font-size:2.6rem;
+      color:#ff85b2;
+      margin:0;
+      text-shadow:2px 2px white;
+      letter-spacing:.5px;
+    }
+
+    /* TOP BAR score VS realtime */
+    .topbar{
+      max-width:1100px;
+      margin:10px auto 0;
+      padding:10px 12px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      border-radius:18px;
+      background: rgba(255,255,255,0.86);
+      box-shadow: 0 10px 24px rgba(0,0,0,0.06);
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 14px;
+      border-radius:999px;
+      background:white;
+      border:2px solid #f3f3f3;
+      font-weight:700;
+      flex-wrap:wrap;
+      justify-content:center;
+    }
+    .pill small{
+      font-weight:800;
+      opacity:.85;
+      font-size:1.05rem;
+    }
+    .vs{
+      font-size:1.15rem;
+      font-weight:900;
+    }
+    .code{
+      font-weight:900;
+      color:#8b5e3c;
+      background: var(--pompom-yellow);
+      border:2px solid #f7e06d;
+      padding:8px 12px;
+      border-radius:999px;
+      white-space:nowrap;
+    }
+
+    /* Lobby controls */
+    .lobby{
+      max-width:1100px;
+      margin:12px auto 0;
+      padding:0 12px;
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:center;
+      align-items:center;
+    }
+    .input{
+      font-family: inherit;
+      font-weight:800;
+      padding:12px 14px;
+      border-radius:14px;
+      border:2px solid #eee;
+      outline:none;
+      min-width: 220px;
+      background:white;
+    }
+    .btn{
+      font-family: inherit;
+      font-weight:900;
+      padding:12px 14px;
+      border-radius:14px;
+      border:0;
+      cursor:pointer;
+      background: var(--pompom-yellow);
+      border:2px solid #f7e06d;
+      color:#8b5e3c;
+      transition: transform .12s ease, filter .12s ease;
+    }
+    .btn:hover{ filter: brightness(1.02); }
+    .btn:active{ transform: scale(0.98); }
+
+    .hint{
+      width:100%;
+      text-align:center;
+      opacity:.78;
+      font-weight:700;
+      margin-top:4px;
+    }
+
+    /* Main arena: big board + mini opponent */
+    .arena{
+      max-width:1100px;
+      margin:14px auto 24px;
+      padding:0 12px;
+      display:grid;
+      grid-template-columns: 1fr 320px;
+      gap:14px;
+      align-items:start;
+    }
+
+    .card{
+      background:white;
+      border-radius:28px;
+      padding:16px;
+      box-shadow:0 15px 35px rgba(255,133,178,0.14);
+      border:2px solid rgba(0,0,0,0.04);
+      overflow:hidden;
+    }
+
+    .cardhead{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:12px;
+      flex-wrap:wrap;
+    }
+    .name{
+      font-size:1.15rem;
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .tag{
+      font-weight:900;
+      padding:6px 10px;
+      border-radius:999px;
+      border:2px solid #f3f3f3;
+      background:#fff;
+      opacity:.92;
+      white-space:nowrap;
+    }
+
+    /* Big board */
+    .game-grid{
+      width:100%;
+      aspect-ratio: 4 / 5;
+      max-height: 620px;
+      background:#fafafa;
+      border:8px solid #f0f0f0;
+      border-radius:22px;
+      position:relative;
+      overflow:hidden;
+      cursor:pointer;
+      transition: transform .2s ease, filter .2s ease;
+    }
+    .game-grid:hover{
+      transform: translateY(-2px);
+      filter: saturate(1.03);
+    }
+
+    #grid-emy{
+      background-image:url('emy.png');
+      background-size:cover;
+      background-position:center;
+    }
+
+    /* Mini opponent board (grid 10x12) */
+    .mini-grid{
+      width:100%;
+      aspect-ratio: 4 / 5;
+      background:#fafafa;
+      border:8px solid #f0f0f0;
+      border-radius:22px;
+      position:relative;
+      overflow:hidden;
+      display:grid;
+      grid-template-columns: repeat(10, 1fr);
+      grid-template-rows: repeat(12, 1fr);
+      gap:2px;
+      padding:8px;
+    }
+    .cell{
+      border-radius: 4px;
+      background: rgba(0,0,0,0.05);
+    }
+
+    /* Responsive */
+    @media (max-width: 860px){
+      .header h1{ font-size:2.2rem; }
+      .arena{ grid-template-columns: 1fr; }
+      .topbar{ flex-wrap:wrap; justify-content:center; }
+    }
+
+    /* Modal backdrop + popup */
+    #modal-backdrop{
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .22s ease;
+      backdrop-filter: blur(2px);
+    }
+    #game-over-overlay{
+      position:fixed;
+      top:50%; left:50%;
+      transform:translate(-50%, -50%) scale(0.96);
+      background:white;
+      padding:36px;
+      border-radius:44px;
+      box-shadow:0 0 150px rgba(0,0,0,0.5);
+      text-align:center;
+      z-index:1000;
+      border:10px solid var(--pompom-yellow);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .22s ease, transform .22s ease;
+      max-width: 92vw;
+    }
+    #modal-backdrop.open{ opacity: 1; pointer-events:auto; }
+    #game-over-overlay.open{
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    .pompom-butt{ width:200px; max-width:65vw; }
+    .btn-revancha{
+      font-family: inherit;
+      background:var(--pompom-yellow);
+      border:4px solid #f7e06d;
+      padding:14px 18px;
+      border-radius:22px;
+      font-weight:900;
+      cursor:pointer;
+      font-size:1.1rem;
+      color:#8b5e3c;
+      margin-top:14px;
+      transition: transform .12s ease;
+    }
+    .btn-revancha:active{ transform: scale(0.98); }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <h1>bblastcute</h1>
+  </div>
+
+  <div class="topbar">
+    <div class="pill">
+      <span class="vs">EMY 🎀</span>
+      <small id="top-emy-score">0</small>
+      <span style="opacity:.55; font-weight:900;">VS</span>
+      <small id="top-diego-score">0</small>
+      <span class="vs">DIEGO 🍭</span>
+    </div>
+    <div class="code" id="room-code">ROOM: —</div>
+  </div>
+
+  <div class="lobby">
+    <input class="input" id="playerName" placeholder="Tu nombre (EMY o DIEGO)" />
+    <button class="btn" id="btnCreate">Crear sala</button>
+    <input class="input" id="roomCodeInput" placeholder="Código sala (ej BB-4H2K9)" />
+    <button class="btn" id="btnJoin">Unirme</button>
+    <div class="hint" id="status">Estado: lista. crea sala o únete 💕</div>
+  </div>
+
+  <div class="arena">
+    <!-- Your big board -->
+    <div class="card" style="border: 6px solid var(--pink-emy);">
+      <div class="cardhead">
+        <div class="name">Tu tablero 🎀 <span class="tag" id="meTag">—</span></div>
+        <div class="tag">Click = +100 (demo)</div>
+      </div>
+      <div class="game-grid" id="grid-emy" title="demo: click para sumar"></div>
+    </div>
+
+    <!-- Opponent mini board -->
+    <div class="card" style="border: 6px solid var(--purple-diego);">
+      <div class="cardhead">
+        <div class="name">Rival 🍭 <span class="tag" id="oppTag">—</span></div>
+        <div class="tag">Live mini</div>
+      </div>
+      <div class="mini-grid" id="miniGrid"></div>
+    </div>
+  </div>
+
+  <!-- Backdrop + Popup -->
+  <div id="modal-backdrop" aria-hidden="true"></div>
+  <div id="game-over-overlay" role="dialog" aria-modal="true">
+    <img src="pompom.png" class="pompom-butt" alt="pompom" />
+    <h2>¡TE VOLVIERON A GANAR!</h2>
+    <button class="btn-revancha">¿QUIERES QUE TE GANE OTRA VEZ???</button>
+  </div>
+
+  <script>
+    /***************
+     * 1) SUPABASE CONFIG
+     * (modo simple: hardcode)
+     ***************/
+    const SUPABASE_URL = "https://zemahkgewkhwasfelubd.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_zKobvn65UtJFZstirEWTOQ_NmorSF-3";
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    /***************
+     * 2) UI refs
+     ***************/
+    const statusEl = document.getElementById('status');
+    const roomCodeEl = document.getElementById('room-code');
+    const nameInput = document.getElementById('playerName');
+    const roomInput = document.getElementById('roomCodeInput');
+
+    const topEmy = document.getElementById('top-emy-score');
+    const topDiego = document.getElementById('top-diego-score');
+
+    const meTag = document.getElementById('meTag');
+    const oppTag = document.getElementById('oppTag');
+
+    const miniGridEl = document.getElementById('miniGrid');
+
+    const overlay = document.getElementById('game-over-overlay');
+    const backdrop = document.getElementById('modal-backdrop');
+
+    /***************
+     * 3) STATE
+     ***************/
+    let room = null;     // {id, code}
+    let me = null;       // 'emy' or 'diego'
+    let channel = null;
+
+    let scoreEmy = 0;
+    let scoreDiego = 0;
+
+    // Demo grid 10x12: 0 vacío, 1 ocupado
+    const W = 10, H = 12;
+    let myGrid = makeEmptyGrid();
+    let oppGrid = makeEmptyGrid();
+
+    function makeEmptyGrid(){
+      return Array.from({length: H}, () => Array.from({length: W}, () => 0));
+    }
+    function setStatus(msg){ statusEl.textContent = "Estado: " + msg; }
+
+    /***************
+     * 4) Room codes
+     ***************/
+    function randomCode(){
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let s = "BB-";
+      for(let i=0;i<5;i++) s += chars[Math.floor(Math.random()*chars.length)];
+      return s;
+    }
+
+    function normalizePlayerName(raw){
+      const v = (raw || "").trim().toLowerCase();
+      if (v.includes("emy")) return "emy";
+      if (v.includes("diego")) return "diego";
+      return null;
+    }
+
+    /***************
+     * 5) Render
+     ***************/
+    function renderTopScores(){
+      topEmy.textContent = scoreEmy.toLocaleString();
+      topDiego.textContent = scoreDiego.toLocaleString();
+    }
+
+    function renderMiniGrid(grid){
+      miniGridEl.innerHTML = "";
+      for(let r=0;r<H;r++){
+        for(let c=0;c<W;c++){
+          const cell = document.createElement("div");
+          cell.className = "cell";
+
+          if(grid[r][c] === 1){
+            cell.style.background = "rgba(181, 133, 255, 0.55)"; // violeta cute
+          }
+          miniGridEl.appendChild(cell);
+        }
+      }
+    }
+
+    /***************
+     * 6) Modal (ESC + backdrop)
+     ***************/
+    function mostrarGameOver(){
+      backdrop.classList.add('open');
+      overlay.classList.add('open');
+    }
+    function cerrarGameOver(){
+      overlay.classList.remove('open');
+      backdrop.classList.remove('open');
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if(e.key === "Escape" && overlay.classList.contains("open")) cerrarGameOver();
+    });
+    backdrop.addEventListener('click', () => cerrarGameOver());
+    document.querySelector('.btn-revancha').addEventListener('click', () => location.reload());
+
+    /***************
+     * 7) Realtime subscribe (room_state changes)
+     ***************/
+    async function subscribeRoom(roomId){
+      if(channel) await supabase.removeChannel(channel);
+
+      channel = supabase
+        .channel('room:' + roomId)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'room_state', filter: `room_id=eq.${roomId}` },
+          (payload) => {
+            const row = payload.new;
+            if(!row) return;
+
+            scoreEmy = row.emy_score ?? 0;
+            scoreDiego = row.diego_score ?? 0;
+
+            // ver al rival: si soy emy veo diego_grid, si soy diego veo emy_grid
+            const incomingOpp = (me === "emy") ? row.diego_grid : row.emy_grid;
+            if(incomingOpp){
+              oppGrid = incomingOpp;
+              renderMiniGrid(oppGrid);
+            }
+
+            renderTopScores();
+          }
+        )
+        .subscribe((s) => {
+          // s = status: SUBSCRIBED, etc.
+        });
+
+      setStatus("conectada a sala (realtime ON)");
+    }
+
+    /***************
+     * 8) DB ops
+     ***************/
+    async function createRoom(){
+      const code = randomCode();
+
+      const { data: roomRow, error: e1 } = await supabase
+        .from('rooms')
+        .insert({ code })
+        .select()
+        .single();
+      if(e1) throw e1;
+
+      const { error: e2 } = await supabase
+        .from('room_state')
+        .insert({
+          room_id: roomRow.id,
+          emy_score: 0,
+          diego_score: 0,
+          emy_grid: makeEmptyGrid(),
+          diego_grid: makeEmptyGrid(),
+        });
+      if(e2) throw e2;
+
+      return roomRow;
+    }
+
+    async function loadRoomByCode(code){
+      const { data, error } = await supabase
+        .from('rooms')
+        .select('*')
+        .eq('code', code)
+        .single();
+      if(error) throw error;
+      return data;
+    }
+
+    async function updateRoomState(patch){
+      if(!room) return;
+      patch.updated_at = new Date().toISOString();
+
+      // limpiamos undefined para no romper updates
+      Object.keys(patch).forEach(k => patch[k] === undefined && delete patch[k]);
+
+      const { error } = await supabase
+        .from('room_state')
+        .update(patch)
+        .eq('room_id', room.id);
+
+      if(error) console.error(error);
+    }
+
+    /***************
+     * 9) Buttons
+     ***************/
+    document.getElementById('btnCreate').addEventListener('click', async () => {
+      try{
+        me = normalizePlayerName(nameInput.value);
+        if(!me) return setStatus("pon tu nombre: EMY o DIEGO");
+
+        meTag.textContent = me.toUpperCase();
+        oppTag.textContent = (me === "emy" ? "DIEGO" : "EMY");
+
+        setStatus("creando sala...");
+        room = await createRoom();
+        roomCodeEl.textContent = "ROOM: " + room.code;
+        roomInput.value = room.code;
+
+        await subscribeRoom(room.id);
+
+        // fetch inicial state para ver scores apenas entres
+        const { data: st } = await supabase.from('room_state').select('*').eq('room_id', room.id).single();
+        if(st){
+          scoreEmy = st.emy_score ?? 0;
+          scoreDiego = st.diego_score ?? 0;
+          renderTopScores();
+          renderMiniGrid(makeEmptyGrid());
+        }
+
+        setStatus("sala creada. comparte el código 💖");
+      }catch(err){
+        console.error(err);
+        setStatus("error creando sala (mira consola F12)");
+      }
+    });
+
+    document.getElementById('btnJoin').addEventListener('click', async () => {
+      try{
+        me = normalizePlayerName(nameInput.value);
+        if(!me) return setStatus("pon tu nombre: EMY o DIEGO");
+
+        const code = (roomInput.value || "").trim().toUpperCase();
+        if(!code) return setStatus("pon el código de la sala");
+
+        meTag.textContent = me.toUpperCase();
+        oppTag.textContent = (me === "emy" ? "DIEGO" : "EMY");
+
+        setStatus("uniéndome...");
+        room = await loadRoomByCode(code);
+        roomCodeEl.textContent = "ROOM: " + room.code;
+
+        await subscribeRoom(room.id);
+
+        const { data: st, error } = await supabase
+          .from('room_state')
+          .select('*')
+          .eq('room_id', room.id)
+          .single();
+        if(error) throw error;
+
+        scoreEmy = st.emy_score ?? 0;
+        scoreDiego = st.diego_score ?? 0;
+
+        const incomingOpp = (me === "emy") ? st.diego_grid : st.emy_grid;
+        if(incomingOpp){
+          oppGrid = incomingOpp;
+          renderMiniGrid(oppGrid);
+        } else {
+          renderMiniGrid(makeEmptyGrid());
+        }
+
+        renderTopScores();
+        setStatus("unida a sala. realtime ON ✨");
+      }catch(err){
+        console.error(err);
+        setStatus("no encontré esa sala o falta permisos (mira consola)");
+      }
+    });
+
+    /***************
+     * 10) DEMO gameplay
+     * Click en tu tablero: +100 y pinta una celda random
+     * El otro ve tu tablero en mini en tiempo real
+     ***************/
+    document.getElementById('grid-emy').addEventListener('click', async () => {
+      if(!room || !me) return setStatus("primero crea o únete a una sala");
+
+      // score +100 para quien sea
+      if(me === "emy") scoreEmy += 100;
+      else scoreDiego += 100;
+
+      // pinta una celda random en TU grid (para que el rival lo vea)
+      const r = Math.floor(Math.random() * H);
+      const c = Math.floor(Math.random() * W);
+      myGrid[r][c] = 1;
+
+      await updateRoomState({
+        emy_score: scoreEmy,
+        diego_score: scoreDiego,
+        emy_grid: (me === "emy") ? myGrid : undefined,
+        diego_grid: (me === "diego") ? myGrid : undefined,
+      });
+
+      renderTopScores();
+
+      // (demo) si quieres probar el popup:
+      // if(scoreDiego < 0) mostrarGameOver();
+    });
+
+    // init
+    renderTopScores();
+    renderMiniGrid(makeEmptyGrid());
+  </script>
+
+  <!--
+    OPCIONAL (más seguro): usar variables de entorno en Netlify
+    - En Netlify: Site settings → Environment variables:
+      SUPABASE_URL
+      SUPABASE_ANON_KEY
+    - Y aquí en vez de hardcode, lo leerías con una función serverless o build step.
+    Para este MVP, hardcode está OK (pero no uses jamás sb_secret).
+  -->
+</body>
+</html>
+

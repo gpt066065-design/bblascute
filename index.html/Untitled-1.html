@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>bblastcute 🎀</title>
+    <style>
+        :root {
+            --pink-emy: #ffcce5;
+            --purple-diego: #e5ccff;
+            --pompom-yellow: #fff4a3;
+        }
+        body {
+            font-family: 'Comic Sans MS', cursive;
+            background-color: #fff0f6; /* Rosa pastel suave */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+        }
+        .header {
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 3.5rem;
+            color: #ff85b2;
+            margin: 0;
+            text-shadow: 2px 2px white;
+        }
+        .arena {
+            display: flex;
+            justify-content: center;
+            gap: 50px;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .board-container {
+            background: white;
+            padding: 25px;
+            border-radius: 40px;
+            box-shadow: 0 15px 35px rgba(255, 133, 178, 0.2);
+            text-align: center;
+        }
+        .player-name {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            color: #555;
+        }
+        .score {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #ff4081;
+            margin-bottom: 15px;
+        }
+        .game-grid {
+            width: 320px;
+            height: 400px;
+            background: #fafafa;
+            border: 8px solid #f0f0f0;
+            border-radius: 20px;
+        }
+        /* El Pop-up del Asterisco */
+        #game-over-overlay {
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 50px;
+            border-radius: 60px;
+            box-shadow: 0 0 150px rgba(0,0,0,0.3);
+            text-align: center;
+            z-index: 1000;
+            border: 10px solid var(--pompom-yellow);
+        }
+        .pompom-butt { width: 220px; }
+        .btn-revancha {
+            background: var(--pompom-yellow);
+            border: 4px solid #f7e06d;
+            padding: 20px 40px;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: #8b5e3c;
+            margin-top: 20px;
+        }
+        #grid-emy {
+        background-image: url('https://i.pinimg.com/originals/60/6a/7e/606a7e584f18077c95231c5061619622.gif'); 
+        background-size: cover;
+        background-position: center;
+        opacity: 0.9;
+    }
+
+    #grid-diego {
+        background-image: url('https://i.pinimg.com/originals/6a/6c/4d/6a6c4d872199b00d43f07a2f5f6e806c.gif'); 
+        background-size: cover;
+        background-position: center;
+        opacity: 0.8;
+    }
+
+    /* El brillo de victoria para la Senior */
+    .board-container:first-child {
+        animation: glow 2s infinite alternate;
+        border: 8px solid var(--pink-emy) !important;
+    }
+
+    @keyframes glow {
+        from { box-shadow: 0 0 15px #ffcce5; }
+        to { box-shadow: 0 0 35px #ff85b2; }
+    }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>bblastcute</h1>
+</div>
+
+<div class="arena">
+    <div class="board-container" style="border: 6px solid var(--pink-emy);">
+        <div class="player-name">EMY 🎀</div>
+        <div class="score" id="score-emy">0</div>
+        <div class="game-grid" id="grid-emy">
+            </div>
+    </div>
+
+    <div class="board-container" style="border: 6px solid var(--purple-diego);">
+        <div class="player-name">DIEGO 🍭</div>
+        <div class="score" id="score-diego">0</div>
+        <div class="game-grid" id="grid-diego">
+            </div>
+    </div>
+</div>
+
+<div id="game-over-overlay">
+    <img src="https://i.pinimg.com/originals/f3/7a/12/f37a1262d49938b8156173a386b245e3.png" class="pompom-butt">
+    <h2 style="color: #ff4081; font-size: 2rem;">¡TE VOLVIERON A GANAR!</h2>
+    <button class="btn-revancha">¿QUIERES QUE TE GANE OTRA VEZ???</button>
+</div>
+<script>
+    // Configuración inicial de bblastcute
+    let scoreEmy = 0;
+    let scoreDiego = 0;
+
+    // Función para actualizar puntajes en tiempo real
+    function actualizarPuntaje(jugador, puntos) {
+        if (jugador === 'emy') {
+            scoreEmy += puntos;
+            document.getElementById('score-emy').innerText = scoreEmy.toLocaleString();
+        } else {
+            scoreDiego += puntos;
+            document.getElementById('score-diego').innerText = scoreDiego.toLocaleString();
+            
+            // Si Diego pierde (simulación por ahora), lanzamos el Pompompurin
+            if (scoreDiego < 0) { // Condición de prueba
+                mostrarGameOver();
+            }
+        }
+    }
+
+    function mostrarGameOver() {
+        document.getElementById('game-over-overlay').style.display = 'block';
+    }
+
+    // El botón de la revancha letal
+    document.querySelector('.btn-revancha').addEventListener('click', () => {
+        alert("Reiniciando humillación... prepárate Diego.");
+        location.reload(); 
+    });
+
+    console.log("bblastcute online. Sistema de Sanrio listo para la guerra.");
+</script>
+</body>
+</html>
